@@ -34,8 +34,8 @@ struct DrawPills: View {
     
     var body: some View {
         ForEach(pills, id: \.self) { pill in
-            let px = (pill.row == nil ? pill.x : pill.row! * xMultiplier + xBaseline)
-            let py = (pill.col == nil ? pill.y : pill.col! * yMultiplier + yBaseline)
+            let px: CGFloat? = (pill.row == nil ? pill.x : CGFloat(pill.row! * xMultiplier + xBaseline))
+            let py: CGFloat? = (pill.col == nil ? pill.y : CGFloat(pill.col! * yMultiplier + yBaseline))
             PillView(color1: pill.piece1.color.color, color2: pill.piece2?.color.color, rotation: pill.rotation)
                 .position(CGPoint(x: px ?? 0, y: py ?? 0))
         }

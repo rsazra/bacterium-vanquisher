@@ -68,8 +68,8 @@ struct Pill: Hashable {
     var row: Int?
     var col: Int?
     
-    var x: Int?
-    var y: Int?
+    var x: CGFloat?
+    var y: CGFloat?
     
     init() {
         piece1 = PillPiece()
@@ -80,8 +80,9 @@ struct Pill: Hashable {
         col = nil
         // spawn point, would need to change this for multiple at a time
         // midpoint and top
-        x = (xBaseline + (6 * xMultiplier))/2
-        y = yBaseline
+        // man this is ugly rn. ideally it would be computed based on view width
+        x = (CGFloat(xBaseline) + (CGFloat(5.75) * CGFloat(xMultiplier)))/2
+        y = CGFloat(yBaseline)
     }
 }
 
