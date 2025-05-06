@@ -8,63 +8,47 @@
 import SwiftUI
 
 struct GameView: View {
-    let game: Game = .init()
+    @ObservedObject var game: Game = .init()
     
     var body: some View {
-        Spacer()
-        PillView(color1: .red, color2: .yellow, position: .one)
-        PillView(color1: .blue, position: .one)
-        StageView(stage: game.stage)
-            .padding(20)
-            .border(.black)
-//        ZStack {
-//            GridView().frame(width: 300, height: 300)
-//            VStack {
-//                PillView(color1: .red, color2: .yellow, position: .one)
-//                PillView(color1: .red, color2: .yellow, position: .two)
-//                PillView(color1: .red, color2: .yellow, position: .three)
-//                PillView(color1: .red, color2: .yellow, position: .four)
-//                    .border(.black)
-//                PillView(color1: .red, position: .four)
-//                VirusView(color: .blue)
-//            }
-//            .padding()
-//        }
-    }
-}
-
-struct StageView: View {
-    let stage: [[StageSpace?]]
-    
-    var body: some View {
-        VStack(spacing: gridSpacing) {
-            ForEach(stage.indices, id: \.self) { column in
-                HStack(spacing: gridSpacing) {
-                    ForEach(stage[column].indices, id: \.self) { row in
-                        let co = stage[column][row]
-                        let color: Color = (co != nil) ? co!.color.color : .clear
-                        VirusView(color: color)
-                    }
-                }
-            }
+        ZStack {
+            DrawViruses(viruses: game.viruses)
+            DrawPills(pills: game.pills)
         }
     }
 }
 
-struct GridView: View {
+struct DrawViruses: View {
+    let viruses: [Virus]
+    
     var body: some View {
-        Rectangle()
-            .stroke(.black)
+        ForEach(viruses, id: \.self) { virus in
+            VirusView(color: virus.color.color)
+                .position(CGPoint(x: virus.row * xMultiplier + xBaseline, y: virus.col * yMultiplier + yBaseline))
+        }
+    }
+}
+
+struct DrawPills: View {
+    let pills: [Pill]
+    
+    var body: some View {
+        ForEach(pills, id: \.self) { pill in
+            let px = (pill.row == nil ? pill.x : pill.row! * xMultiplier + xBaseline)
+            let py = (pill.col == nil ? pill.y : pill.col! * yMultiplier + yBaseline)
+            PillView(color1: pill.piece1.color.color, color2: pill.piece2?.color.color, rotation: pill.rotation)
+                .position(CGPoint(x: px ?? 0, y: py ?? 0))
+        }
     }
 }
 
 struct PillView: View {
     let color1: Color
     var color2: Color?
-    let position: Position
+    let rotation: Rotation
     let size: CGFloat = pillSize
-    var rotation: (Angle, UnitPoint) {
-        switch position {
+    var angle: (Angle, UnitPoint) {
+        switch rotation {
         case .one:
             (.degrees(0), .center)
         case .two:
@@ -76,7 +60,7 @@ struct PillView: View {
         }
     }
     var transform: CGAffineTransform {
-        switch position {
+        switch rotation {
         case .one:
             CGAffineTransform()
         case .two:
@@ -115,8 +99,6 @@ struct PillView: View {
                     .clipped()
                     .offset(x: CGFloat(size))
             }
-            //        .rotationEffect(rotation.0, anchor: rotation.1)
-//            .border(Color.green)
             .transformEffect(transform)
         }
     }

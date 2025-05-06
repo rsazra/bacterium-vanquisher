@@ -5,29 +5,39 @@
 //  Created by Rajbir Singh Azra on 2025-04-30.
 //
 
-class Game {
-    var stage: [[StageSpace?]] = Array(repeating: Array(repeating: nil, count: stageCols), count: stageRows)
-    let fallingPills: [Pill] = []
-    var nextPill: Pill
+import Foundation
+
+class Game: ObservableObject {
+    private var stage: [[VirusColor?]] = Array(repeating: Array(repeating: nil, count: stageRows), count: stageCols)
+    @Published var viruses: [Virus] = []
+    @Published var nextPill: Pill
+    @Published var pills: [Pill] = []
     
     init() {
         nextPill = Pill()
+        pills.append(Pill())
         seed()
     }
     
+    // TODO: need to ensure we don't get 3 in a row of the same color
+    // would be nice to do so by randomly choosing which cell to
+    //  generate next, and having the result show up incrementally
+    //  like in the real game.
     func seed() {
-        for (col, column) in stage.enumerated() {
-            for (row, _) in column.enumerated() {
-                if col < 3 { continue }
+        for (rowIndex, rowContents) in stage.enumerated() {
+            for (colIndex, _) in rowContents.enumerated() {
+                if colIndex < 3 { continue }
                 let options = [nil, VirusColor.red, VirusColor.yellow, VirusColor.blue]
                 
                 if let addition = options.randomElement() {
                     if addition != nil {
-                        stage[col][row] = Virus(color: addition!)
+                        let v = Virus(color: addition!, row: rowIndex, col: colIndex)
+                        viruses.append(v)
+                        stage[rowIndex][colIndex] = v.color
                     }
                 }
             }
         }
     }
-
+    
 }

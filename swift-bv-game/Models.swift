@@ -8,20 +8,20 @@
 import Foundation
 import SwiftUI
 
-enum Position: CaseIterable {
+enum Rotation: CaseIterable {
     case one
     case two
     case three
     case four
 }
 
-extension Position {
-    func next() -> Position {
-        let allCases = Position.allCases
+extension Rotation {
+    func next() -> Rotation {
+        let allCases = Rotation.allCases
         guard let currentIndex = allCases.firstIndex(of: self) else {
             fatalError()
         }
-
+        
         if currentIndex == allCases.endIndex {
             return allCases[allCases.startIndex]
         } else {
@@ -44,7 +44,7 @@ enum VirusColor: CaseIterable {
     }
 }
 
-struct PillPiece: StageSpace {
+struct PillPiece: Hashable {
     let color: VirusColor
     
     init() {
@@ -56,31 +56,37 @@ struct PillPiece: StageSpace {
     }
 }
 
-struct Pill {
+struct Pill: Hashable {
+    static func == (lhs: Pill, rhs: Pill) -> Bool {
+        return lhs.piece1.color == rhs.piece1.color && lhs.piece2?.color == rhs.piece2?.color
+    }
+    
     let piece1: PillPiece
     let piece2: PillPiece?
-    @State var position: Position
+    var rotation: Rotation
+    
+    var row: Int?
+    var col: Int?
+    
+    var x: Int?
+    var y: Int?
     
     init() {
         piece1 = PillPiece()
         piece2 = PillPiece()
-        position = .one
-    }
-    
-    func rotate() {
-        if position == .four {
-           position = .one
-        }
-        else {
-            position = position.next()
-        }
+        rotation = .one
+        // these means it is falling
+        row = nil
+        col = nil
+        // spawn point, would need to change this for multiple at a time
+        // midpoint and top
+        x = (xBaseline + (6 * xMultiplier))/2
+        y = yBaseline
     }
 }
 
-struct Virus: StageSpace {
+struct Virus: Hashable {
     let color: VirusColor
-}
-
-protocol StageSpace {
-    var color: VirusColor { get }
+    let row: Int
+    let col: Int
 }
