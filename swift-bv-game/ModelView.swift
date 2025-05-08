@@ -40,4 +40,9 @@ class Game: ObservableObject {
         }
     }
     
+    func rotatePill(id: UUID) {
+        if let index = pills.firstIndex(where: { $0.id == id }) {
+            pills[index].rotation = pills[index].rotation.next()
+        }
+    }
 }

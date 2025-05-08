@@ -9,23 +9,26 @@ import Foundation
 import SwiftUI
 
 enum Rotation: CaseIterable {
-    case one
-    case two
-    case three
-    case four
+    case one, two, three, four
 }
 
 extension Rotation {
     func next() -> Rotation {
-        let allCases = Rotation.allCases
-        guard let currentIndex = allCases.firstIndex(of: self) else {
-            fatalError()
-        }
-        
-        if currentIndex == allCases.endIndex {
-            return allCases[allCases.startIndex]
-        } else {
-            return allCases[allCases.index(after: currentIndex)]
+//        let allCases = Rotation.allCases
+//        guard let currentIndex = allCases.firstIndex(of: self) else {
+//            fatalError()
+//        }
+//        
+//        if currentIndex == allCases.endIndex {
+//            return allCases[allCases.startIndex]
+//        } else {
+//            return allCases[allCases.index(after: currentIndex)]
+//        }
+        switch self {
+        case .one: return .two
+        case .two: return .three
+        case .three: return .four
+        case .four: return .one
         }
     }
 }
@@ -56,26 +59,29 @@ struct PillPiece: Hashable {
     }
 }
 
-struct Pill: Hashable {
+struct Pill: Identifiable {
     static func == (lhs: Pill, rhs: Pill) -> Bool {
         return lhs.piece1.color == rhs.piece1.color && lhs.piece2?.color == rhs.piece2?.color
     }
     
+    let id: UUID
+    
     let piece1: PillPiece
-    let piece2: PillPiece?
+    var piece2: PillPiece?
     var rotation: Rotation
     
     var row: Int?
     var col: Int?
     
-    var x: CGFloat?
-    var y: CGFloat?
+    var x: CGFloat
+    var y: CGFloat
     
     init() {
+        id = UUID()
         piece1 = PillPiece()
         piece2 = PillPiece()
         rotation = .one
-        // these means it is falling
+        // these being nil means it is falling
         row = nil
         col = nil
         // spawn point, would need to change this for multiple at a time

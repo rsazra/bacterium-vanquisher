@@ -13,7 +13,7 @@ struct GameView: View {
     var body: some View {
         ZStack {
             DrawViruses(viruses: game.viruses)
-            DrawPills(pills: game.pills)
+            DrawPills(pills: game.pills, onRotate: game.rotatePill)
         }
     }
 }
@@ -31,20 +31,39 @@ struct DrawViruses: View {
 
 struct DrawPills: View {
     let pills: [Pill]
+    let onRotate: (UUID) -> Void
     
     var body: some View {
-        ForEach(pills, id: \.self) { pill in
-            let px: CGFloat? = (pill.row == nil ? pill.x : CGFloat(pill.row! * xMultiplier + xBaseline))
-            let py: CGFloat? = (pill.col == nil ? pill.y : CGFloat(pill.col! * yMultiplier + yBaseline))
+        ForEach(pills) { pill in
+            var px: CGFloat {
+                if pill.row == nil {
+                    pill.x
+                }
+                else {
+                    CGFloat(pill.row! * xMultiplier + xBaseline) }
+            }
+            var py: CGFloat {
+                if pill.col == nil {
+                    pill.y
+                }
+                else {
+                    CGFloat(pill.col! * yMultiplier + yBaseline) }
+            }
             PillView(color1: pill.piece1.color.color, color2: pill.piece2?.color.color, rotation: pill.rotation)
-                .position(CGPoint(x: px ?? 0, y: py ?? 0))
+                .position(CGPoint(x: px, y: py))
+                .gesture(
+                    TapGesture().onEnded({
+                        onRotate(pill.id)
+                        print("tapped \(pill.rotation)")
+                    })
+                )
         }
     }
 }
 
 struct PillView: View {
     let color1: Color
-    var color2: Color?
+    let color2: Color?
     let rotation: Rotation
     let size: CGFloat = pillSize
     var angle: (Angle, UnitPoint) {
@@ -66,15 +85,15 @@ struct PillView: View {
         case .two:
             CGAffineTransform(rotationAngle: 0)
                 .rotated(by: 90 * (.pi / 180))
-                .translatedBy(x: -45, y: -45)
+                .translatedBy(x: -pillSize, y: -pillSize)
         case .three:
             CGAffineTransform(rotationAngle: 0)
                 .rotated(by: 180 * (.pi / 180))
-                .translatedBy(x: -90, y: -45)
+                .translatedBy(x: -pillSize*2, y: -pillSize)
         case .four:
             CGAffineTransform(rotationAngle: 0)
                 .rotated(by: 270 * (.pi / 180))
-                .translatedBy(x: -45, y: 0)
+                .translatedBy(x: -pillSize, y: 0)
         }
     }
     
