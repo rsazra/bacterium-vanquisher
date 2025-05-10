@@ -15,6 +15,9 @@ struct GameView: View {
             DrawViruses(viruses: game.viruses)
             DrawPills(pills: game.pills, onRotate: game.rotatePill)
         }
+        .onAppear {
+            game.startGameLoop()
+        }
     }
 }
 

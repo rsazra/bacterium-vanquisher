@@ -14,22 +14,23 @@ enum Rotation: CaseIterable {
 
 extension Rotation {
     func next() -> Rotation {
-//        let allCases = Rotation.allCases
-//        guard let currentIndex = allCases.firstIndex(of: self) else {
-//            fatalError()
-//        }
-//        
-//        if currentIndex == allCases.endIndex {
-//            return allCases[allCases.startIndex]
-//        } else {
-//            return allCases[allCases.index(after: currentIndex)]
-//        }
         switch self {
         case .one: return .two
         case .two: return .three
         case .three: return .four
         case .four: return .one
         }
+        /// not sure why this didn't work
+        //        let allCases = Rotation.allCases
+        //        guard let currentIndex = allCases.firstIndex(of: self) else {
+        //            fatalError()
+        //        }
+        //
+        //        if currentIndex == allCases.endIndex {
+        //            return allCases[allCases.startIndex]
+        //        } else {
+        //            return allCases[allCases.index(after: currentIndex)]
+        //        }
     }
 }
 
@@ -55,7 +56,6 @@ struct PillPiece: Hashable {
             fatalError()
         }
         color = addition
-        
     }
 }
 

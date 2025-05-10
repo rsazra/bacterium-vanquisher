@@ -5,9 +5,12 @@
 //  Created by Rajbir Singh Azra on 2025-04-30.
 //
 
+import Combine
 import Foundation
 
 class Game: ObservableObject {
+    private var timer: AnyCancellable?
+    
     private var stage: [[VirusColor?]] = Array(repeating: Array(repeating: nil, count: stageRows), count: stageCols)
     @Published var viruses: [Virus] = []
     @Published var nextPill: Pill
@@ -44,5 +47,32 @@ class Game: ObservableObject {
         if let index = pills.firstIndex(where: { $0.id == id }) {
             pills[index].rotation = pills[index].rotation.next()
         }
+    }
+    
+    func startGameLoop() {
+        // try other values for tick time
+        // how does this actually work though?
+        timer = Timer.publish(every: 0.5, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                self?.gameTick()
+            }
+    }
+    
+    func stopGameLoop() {
+        timer?.cancel()
+        timer = nil
+    }
+    
+    private func gameTick() {
+        // This is called every tick; update your pills here
+        // For example, move the falling pill down by one row
+        for i in pills.indices {
+            if pills[i].row == nil {
+                pills[i].y += 10 // try other values
+            }
+        }
+        
+        // Add collision/landing logic here
     }
 }
