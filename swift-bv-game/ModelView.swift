@@ -26,7 +26,7 @@ class Game: ObservableObject {
     // would be nice to do so by randomly choosing which cell to
     //  generate next, and having the result show up incrementally
     //  like in the real game.
-    func seed() {
+    private func seed() {
         for (rowIndex, rowContents) in stage.enumerated() {
             for (colIndex, _) in rowContents.enumerated() {
                 if colIndex < 3 { continue }
@@ -49,10 +49,20 @@ class Game: ObservableObject {
         }
     }
     
+    func movePill(id: UUID, newX: CGFloat, newY: CGFloat) {
+        // this if let is not dry...
+        if let index = pills.firstIndex(where: { $0.id == id }) {
+            pills[index].x = newX // need to snap this to columns
+            if pills[index].y <= newY {
+                pills[index].y = newY
+            }
+        }
+    }
+    
     func startGameLoop() {
         // try other values for tick time
         // how does this actually work though?
-        timer = Timer.publish(every: 0.5, on: .main, in: .common)
+        timer = Timer.publish(every: 0.1, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
                 self?.gameTick()
@@ -65,11 +75,9 @@ class Game: ObservableObject {
     }
     
     private func gameTick() {
-        // This is called every tick; update your pills here
-        // For example, move the falling pill down by one row
         for i in pills.indices {
             if pills[i].row == nil {
-                pills[i].y += 10 // try other values
+                pills[i].y += 1 // try other values
             }
         }
         

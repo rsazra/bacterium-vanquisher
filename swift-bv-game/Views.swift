@@ -13,7 +13,7 @@ struct GameView: View {
     var body: some View {
         ZStack {
             DrawViruses(viruses: game.viruses)
-            DrawPills(pills: game.pills, onRotate: game.rotatePill)
+            DrawPills(pills: game.pills, onRotate: game.rotatePill, onMove: game.movePill)
         }
         .onAppear {
             game.startGameLoop()
@@ -35,6 +35,7 @@ struct DrawViruses: View {
 struct DrawPills: View {
     let pills: [Pill]
     let onRotate: (UUID) -> Void
+    let onMove: (UUID, CGFloat, CGFloat) -> Void
     
     var body: some View {
         ForEach(pills) { pill in
@@ -58,6 +59,11 @@ struct DrawPills: View {
                     TapGesture().onEnded({
                         onRotate(pill.id)
                         print("tapped \(pill.rotation)")
+                    })
+                )
+                .gesture(
+                    DragGesture().onChanged({ value in
+                        onMove(pill.id, value.location.x, value.location.y)
                     })
                 )
         }
