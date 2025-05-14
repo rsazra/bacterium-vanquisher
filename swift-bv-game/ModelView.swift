@@ -11,7 +11,7 @@ import Foundation
 class Game: ObservableObject {
     private var timer: AnyCancellable?
     
-    private var stage: [[VirusColor?]] = Array(repeating: Array(repeating: nil, count: stageRows), count: stageCols)
+    private var stage: [[VirusColor?]] = Array(repeating: Array(repeating: nil, count: stageCols), count: stageRows)
     @Published var viruses: [Virus] = []
     @Published var nextPill: Pill
     @Published var pills: [Pill] = []
@@ -29,7 +29,7 @@ class Game: ObservableObject {
     private func seed() {
         for (rowIndex, rowContents) in stage.enumerated() {
             for (colIndex, _) in rowContents.enumerated() {
-                if colIndex < 3 { continue }
+                if rowIndex < 3 { continue }
                 let options = [nil, VirusColor.red, VirusColor.yellow, VirusColor.blue]
                 
                 if let addition = options.randomElement() {
@@ -56,6 +56,13 @@ class Game: ObservableObject {
             if pills[index].y <= newY {
                 pills[index].y = newY
             }
+        }
+    }
+    
+    func snapPillToGrid(id: UUID) {
+        if let index = pills.firstIndex(where: { $0.id == id }) {
+            // need to find the bounds...
+//            pills[index].x = 
         }
     }
     

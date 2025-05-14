@@ -11,12 +11,24 @@ struct GameView: View {
     @ObservedObject var game: Game = .init()
     
     var body: some View {
-        ZStack {
-            DrawViruses(viruses: game.viruses)
-            DrawPills(pills: game.pills, onRotate: game.rotatePill, onMove: game.movePill)
-        }
-        .onAppear {
-            game.startGameLoop()
+        GeometryReader { geometry in
+            ZStack {
+                ZStack {
+                    DrawViruses(viruses: game.viruses)
+                    DrawPills(pills: game.pills, onRotate: game.rotatePill, onMove: game.movePill, onRelease: game.snapPillToGrid)
+                }
+                .frame(width: CGFloat(stageCols) * baseSize,
+                       height: CGFloat(stageRows) * baseSize)
+                .border(.green)
+                .position(
+                    x: geometry.size.width / 2,
+                    y: geometry.size.height / 2
+                )
+            }
+            .border(.cyan)
+            .onAppear {
+                game.startGameLoop()
+            }
         }
     }
 }
@@ -27,7 +39,7 @@ struct DrawViruses: View {
     var body: some View {
         ForEach(viruses, id: \.self) { virus in
             VirusView(color: virus.color.color)
-                .position(CGPoint(x: virus.row * xMultiplier + xBaseline, y: virus.col * yMultiplier + yBaseline))
+                .position(CGPoint(x: virus.col * Int(baseSize) + xBaseline, y: virus.row * Int(baseSize) + yBaseline))
         }
     }
 }
@@ -36,22 +48,25 @@ struct DrawPills: View {
     let pills: [Pill]
     let onRotate: (UUID) -> Void
     let onMove: (UUID, CGFloat, CGFloat) -> Void
+    let onRelease: (UUID) -> Void
     
     var body: some View {
         ForEach(pills) { pill in
             var px: CGFloat {
-                if pill.row == nil {
+                if pill.col == nil {
                     pill.x
                 }
                 else {
-                    CGFloat(pill.row! * xMultiplier + xBaseline) }
+                    CGFloat(pill.col!) * baseSize + CGFloat(xBaseline)
+                }
             }
             var py: CGFloat {
-                if pill.col == nil {
+                if pill.row == nil {
                     pill.y
                 }
                 else {
-                    CGFloat(pill.col! * yMultiplier + yBaseline) }
+                    CGFloat(pill.row! * Int(baseSize) + yBaseline)
+                }
             }
             PillView(color1: pill.piece1.color.color, color2: pill.piece2?.color.color, rotation: pill.rotation)
                 .position(CGPoint(x: px, y: py))
@@ -62,9 +77,13 @@ struct DrawPills: View {
                     })
                 )
                 .gesture(
-                    DragGesture().onChanged({ value in
-                        onMove(pill.id, value.location.x, value.location.y)
-                    })
+                    DragGesture()
+                        .onChanged({ value in
+                            onMove(pill.id, value.location.x, value.location.y)
+                        })
+                        .onEnded({ value in
+                            onRelease(pill.id)
+                        })
                 )
         }
     }

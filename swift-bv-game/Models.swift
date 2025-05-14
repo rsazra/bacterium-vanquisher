@@ -86,8 +86,7 @@ struct Pill: Identifiable {
         col = nil
         // spawn point, would need to change this for multiple at a time
         // midpoint and top
-        // man this is ugly rn. ideally it would be computed based on view width
-        x = (CGFloat(xBaseline) + (CGFloat(5.75) * CGFloat(xMultiplier)))/2
+        x = CGFloat(stageCols) * baseSize / 2
         y = CGFloat(yBaseline)
     }
 }
