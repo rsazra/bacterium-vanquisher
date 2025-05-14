@@ -69,11 +69,11 @@ struct DrawPills: View {
                 }
             }
             PillView(color1: pill.piece1.color.color, color2: pill.piece2?.color.color, rotation: pill.rotation)
+                .border(.green)
                 .position(CGPoint(x: px, y: py))
                 .gesture(
                     TapGesture().onEnded({
                         onRotate(pill.id)
-                        print("tapped \(pill.rotation)")
                     })
                 )
                 .gesture(

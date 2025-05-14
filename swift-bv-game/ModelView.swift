@@ -52,17 +52,41 @@ class Game: ObservableObject {
     func movePill(id: UUID, newX: CGFloat, newY: CGFloat) {
         // this if let is not dry...
         if let index = pills.firstIndex(where: { $0.id == id }) {
-            pills[index].x = newX // need to snap this to columns
+            var setX = newX
+            if (newX < baseSize) {
+                setX = baseSize
+            }
+            else if (newX > CGFloat(stageCols) * baseSize - baseSize) {
+                setX = CGFloat(stageCols) * baseSize - baseSize
+            }
+            pills[index].x = setX
             if pills[index].y <= newY {
                 pills[index].y = newY
             }
+            print(setX)
         }
     }
     
     func snapPillToGrid(id: UUID) {
         if let index = pills.firstIndex(where: { $0.id == id }) {
-            // need to find the bounds...
-//            pills[index].x = 
+            var setX = pills[index].x
+            switch setX {
+            case ..<(baseSize + baseSize/2):
+                setX = baseSize
+            case (baseSize + baseSize/2)..<(2 * baseSize + baseSize/2):
+                setX = baseSize * 2
+            case (2 * baseSize + baseSize/2)..<(3 * baseSize + baseSize/2):
+                setX = baseSize * 3
+            case (3 * baseSize + baseSize/2)..<(4 * baseSize + baseSize/2):
+                setX = baseSize * 4
+            case (4 * baseSize + baseSize/2)..<(5 * baseSize + baseSize/2):
+                setX = baseSize * 5
+            case (5 * baseSize + baseSize/2)..<(6 * baseSize + baseSize/2):
+                setX = baseSize * 6
+            default:
+                break
+            }
+            pills[index].x = setX
         }
     }
     
