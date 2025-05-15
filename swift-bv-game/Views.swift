@@ -68,8 +68,39 @@ struct DrawPills: View {
                     CGFloat(pill.row! * Int(baseSize) + yBaseline)
                 }
             }
-            PillView(color1: pill.piece1.color.color, color2: pill.piece2?.color.color, rotation: pill.rotation)
+            var angle: (Angle, UnitPoint) {
+                switch pill.rotation {
+                case .one:
+                    (.degrees(0), .center)
+                case .two:
+                    (.degrees(90), .top)
+                case .three:
+                    (.degrees(180), .center)
+                case .four:
+                    (.degrees(270), .top)
+                }
+            }
+            var transform: CGAffineTransform {
+                switch pill.rotation {
+                case .one:
+                    CGAffineTransform()
+                case .two:
+                    CGAffineTransform(rotationAngle: 0)
+                        .rotated(by: 90 * (.pi / 180))
+                        .translatedBy(x: -pillSize, y: -pillSize)
+                case .three:
+                    CGAffineTransform(rotationAngle: 0)
+                        .rotated(by: 180 * (.pi / 180))
+                        .translatedBy(x: -pillSize*2, y: -pillSize)
+                case .four:
+                    CGAffineTransform(rotationAngle: 0)
+                        .rotated(by: 270 * (.pi / 180))
+                        .translatedBy(x: -pillSize, y: 0)
+                }
+            }
+            PillView(color1: pill.piece1.color.color, color2: pill.piece2?.color.color)
                 .border(.green)
+                .transformEffect(transform)
                 .position(CGPoint(x: px, y: py))
                 .gesture(
                     TapGesture().onEnded({
@@ -92,38 +123,7 @@ struct DrawPills: View {
 struct PillView: View {
     let color1: Color
     let color2: Color?
-    let rotation: Rotation
     let size: CGFloat = pillSize
-    var angle: (Angle, UnitPoint) {
-        switch rotation {
-        case .one:
-            (.degrees(0), .center)
-        case .two:
-            (.degrees(90), .top)
-        case .three:
-            (.degrees(180), .center)
-        case .four:
-            (.degrees(270), .top)
-        }
-    }
-    var transform: CGAffineTransform {
-        switch rotation {
-        case .one:
-            CGAffineTransform()
-        case .two:
-            CGAffineTransform(rotationAngle: 0)
-                .rotated(by: 90 * (.pi / 180))
-                .translatedBy(x: -pillSize, y: -pillSize)
-        case .three:
-            CGAffineTransform(rotationAngle: 0)
-                .rotated(by: 180 * (.pi / 180))
-                .translatedBy(x: -pillSize*2, y: -pillSize)
-        case .four:
-            CGAffineTransform(rotationAngle: 0)
-                .rotated(by: 270 * (.pi / 180))
-                .translatedBy(x: -pillSize, y: 0)
-        }
-    }
     
     var body: some View {
         if color2 == nil {
@@ -146,7 +146,7 @@ struct PillView: View {
                     .clipped()
                     .offset(x: CGFloat(size))
             }
-            .transformEffect(transform)
+            .border(.orange)
         }
     }
 }

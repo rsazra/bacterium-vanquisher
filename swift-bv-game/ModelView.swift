@@ -46,18 +46,22 @@ class Game: ObservableObject {
     func rotatePill(id: UUID) {
         if let index = pills.firstIndex(where: { $0.id == id }) {
             pills[index].rotation = pills[index].rotation.next()
+            pills[index].x > 250 ? pills[index].x = 250 : nil
+            /// the above line should be even more general -- if there is no space to rotate,
+            /// should check if we can rotate + move one space to the side. TODO
         }
     }
     
     func movePill(id: UUID, newX: CGFloat, newY: CGFloat) {
         // this if let is not dry...
         if let index = pills.firstIndex(where: { $0.id == id }) {
-            var setX = newX
-            if (newX < baseSize) {
+            let rotationOffset = (pills[index].rotation == .one) || (pills[index].rotation == .three) ? 0 : baseSize
+            var setX = newX + rotationOffset/2
+            if (setX < baseSize) {
                 setX = baseSize
             }
-            else if (newX > CGFloat(stageCols) * baseSize - baseSize) {
-                setX = CGFloat(stageCols) * baseSize - baseSize
+            else if (setX > CGFloat(stageCols - 1) * baseSize + rotationOffset) {
+                setX = CGFloat(stageCols - 1) * baseSize + rotationOffset
             }
             pills[index].x = setX
             if pills[index].y <= newY {
