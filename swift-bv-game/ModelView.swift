@@ -53,9 +53,8 @@ class Game: ObservableObject {
     }
     
     func movePill(id: UUID, newX: CGFloat, newY: CGFloat) {
-        // this if let is not dry...
         if let index = pills.firstIndex(where: { $0.id == id }) {
-            let rotationOffset = (pills[index].rotation == .one) || (pills[index].rotation == .three) ? 0 : baseSize
+            let rotationOffset = pills[index].isHorizontal ? 0 : baseSize
             var setX = newX + rotationOffset/2
             if (setX < baseSize) {
                 setX = baseSize
@@ -67,36 +66,58 @@ class Game: ObservableObject {
             if pills[index].y <= newY {
                 pills[index].y = newY
             }
-            print(setX)
         }
     }
     
-    func snapPillToGrid(id: UUID) {
+    func rowPillOccupying(y: CGFloat) -> Int {
+        switch y {
+        case ..<(baseSize + baseSize/2):
+            return 1
+        case (baseSize + baseSize/2)..<(2 * baseSize + baseSize/2):
+            return 2
+        case (2 * baseSize + baseSize/2)..<(3 * baseSize + baseSize/2):
+            return 3
+        case (3 * baseSize + baseSize/2)..<(4 * baseSize + baseSize/2):
+            return 4
+        case (4 * baseSize + baseSize/2)..<(5 * baseSize + baseSize/2):
+            return 5
+        case (5 * baseSize + baseSize/2)..<(6 * baseSize + baseSize/2):
+            return 6
+        // if greater than all the others
+        default:
+            return 11
+        }
+    }
+    
+    func colPillOccupying(x: CGFloat) -> Int {
+        switch x {
+        case ..<(baseSize + baseSize/2):
+            return 1
+        case (baseSize + baseSize/2)..<(2 * baseSize + baseSize/2):
+            return 2
+        case (2 * baseSize + baseSize/2)..<(3 * baseSize + baseSize/2):
+            return 3
+        case (3 * baseSize + baseSize/2)..<(4 * baseSize + baseSize/2):
+            return 4
+        case (4 * baseSize + baseSize/2)..<(5 * baseSize + baseSize/2):
+            return 5
+            //case (5 * baseSize + baseSize/2)..<(6 * baseSize + baseSize/2):
+            // return 6
+        // if greater than all the others
+        default:
+            return 6
+        }
+    }
+    
+    func snapPillToCol(id: UUID) {
         if let index = pills.firstIndex(where: { $0.id == id }) {
-            var setX = pills[index].x
-            switch setX {
-            case ..<(baseSize + baseSize/2):
-                setX = baseSize
-            case (baseSize + baseSize/2)..<(2 * baseSize + baseSize/2):
-                setX = baseSize * 2
-            case (2 * baseSize + baseSize/2)..<(3 * baseSize + baseSize/2):
-                setX = baseSize * 3
-            case (3 * baseSize + baseSize/2)..<(4 * baseSize + baseSize/2):
-                setX = baseSize * 4
-            case (4 * baseSize + baseSize/2)..<(5 * baseSize + baseSize/2):
-                setX = baseSize * 5
-            case (5 * baseSize + baseSize/2)..<(6 * baseSize + baseSize/2):
-                setX = baseSize * 6
-            default:
-                break
-            }
+            let setX = baseSize * CGFloat(colPillOccupying(x: pills[index].x))
             pills[index].x = setX
         }
     }
     
     func startGameLoop() {
         // try other values for tick time
-        // how does this actually work though?
         timer = Timer.publish(every: 0.1, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
@@ -111,11 +132,30 @@ class Game: ObservableObject {
     
     private func gameTick() {
         for i in pills.indices {
-            if pills[i].row == nil {
-                pills[i].y += 1 // try other values
+            let pill = pills[i]
+            if pill.row == nil {
+                pills[i].y += 0.5 // try other values
             }
+            var colsOccupied: [Int] = []
+            var rowsOccupied: [Int] = []
+            let mainCol = colPillOccupying(x: pill.x)
+            let mainRow = rowPillOccupying(y: pill.y)
+            colsOccupied.append(mainCol)
+            rowsOccupied.append(mainRow)
+            pill.isHorizontal ? colsOccupied.append(mainCol + 1) : rowsOccupied.append(mainRow - 1)
+            
+            for row in rowsOccupied {
+                for col in colsOccupied {
+                    if stage[row][col] != nil {
+                        print("interesecting", row, col)
+                    }
+                }
+            }
+            
+//            print("x/col", pill.x, colsOccupied)
+            print("y/row", pill.y, rowsOccupied)
+            // handle horizontal and vertical separately?
+            if pill.y > 525 { stopGameLoop()}
         }
-        
-        // Add collision/landing logic here
     }
 }

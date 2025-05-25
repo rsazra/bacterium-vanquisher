@@ -15,7 +15,7 @@ struct GameView: View {
             ZStack {
                 ZStack {
                     DrawViruses(viruses: game.viruses)
-                    DrawPills(pills: game.pills, onRotate: game.rotatePill, onMove: game.movePill, onRelease: game.snapPillToGrid)
+                    DrawPills(pills: game.pills, onRotate: game.rotatePill, onMove: game.movePill, onRelease: game.snapPillToCol)
                 }
                 .frame(width: CGFloat(stageCols) * baseSize,
                        height: CGFloat(stageRows) * baseSize)
@@ -28,6 +28,9 @@ struct GameView: View {
             .border(.cyan)
             .onAppear {
                 game.startGameLoop()
+            }
+            .onDisappear {
+                game.stopGameLoop()
             }
         }
     }

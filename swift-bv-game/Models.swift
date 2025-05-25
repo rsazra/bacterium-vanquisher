@@ -69,6 +69,9 @@ struct Pill: Identifiable {
     let piece1: PillPiece
     var piece2: PillPiece?
     var rotation: Rotation
+    var isHorizontal: Bool {
+        return rotation == .one || rotation == .three
+    }
     
     var row: Int?
     var col: Int?
