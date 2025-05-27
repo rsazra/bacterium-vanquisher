@@ -20,7 +20,7 @@ extension Rotation {
         case .three: return .four
         case .four: return .one
         }
-        /// not sure why this didn't work
+        /// not sure why this doesn't work? is this way just better anyways?
         //        let allCases = Rotation.allCases
         //        guard let currentIndex = allCases.firstIndex(of: self) else {
         //            fatalError()
@@ -87,8 +87,7 @@ struct Pill: Identifiable {
         // these being nil means it is falling
         row = nil
         col = nil
-        // spawn point, would need to change this for multiple at a time
-        // midpoint and top
+        // spawn point
         x = CGFloat(stageCols) * baseSize / 2
         y = CGFloat(yBaseline)
     }

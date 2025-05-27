@@ -19,13 +19,11 @@ struct GameView: View {
                 }
                 .frame(width: CGFloat(stageCols) * baseSize,
                        height: CGFloat(stageRows) * baseSize)
-                .border(.green)
                 .position(
                     x: geometry.size.width / 2,
                     y: geometry.size.height / 2
                 )
             }
-            .border(.cyan)
             .onAppear {
                 game.startGameLoop()
             }
@@ -102,7 +100,6 @@ struct DrawPills: View {
                 }
             }
             PillView(color1: pill.piece1.color.color, color2: pill.piece2?.color.color)
-                .border(.green)
                 .transformEffect(transform)
                 .position(CGPoint(x: px, y: py))
                 .gesture(
@@ -149,7 +146,6 @@ struct PillView: View {
                     .clipped()
                     .offset(x: CGFloat(size))
             }
-            .border(.orange)
         }
     }
 }

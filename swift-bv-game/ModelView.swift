@@ -44,7 +44,7 @@ class Game: ObservableObject {
     }
     
     func startGameLoop() {
-        // try other values for tick time
+        // TODO: try other values for tick time
         timer = Timer.publish(every: 0.1, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
@@ -62,11 +62,10 @@ class Game: ObservableObject {
             // do not rotate placed pills!
             if pills[index].row != nil { return }
             
+            // TODO: generalize this
+            /// if there is no space to rotate, check if we can rotate + move one space to the side.
             pills[index].rotation = pills[index].rotation.next()
             pills[index].x > 250 ? pills[index].x = 250 : nil
-            // TODO: generalize this
-            /// the above line should be even more general -- if there is no space to rotate,
-            /// should check if we can rotate + move one space to the side.
         }
     }
     
@@ -124,7 +123,7 @@ class Game: ObservableObject {
     }
     
     private func rowPillOccupying(y: CGFloat) -> Int {
-        let yOffset = y - yBaseline // can adjust overlap with this
+        let yOffset = y - yBaseline // adjust overlap allowance with this?
         for i in 0...9 {
             if yOffset < (baseSize * CGFloat(i)) {
                 return i
@@ -155,6 +154,9 @@ class Game: ObservableObject {
         print("Placing", id, row, col)
         if let index = pills.firstIndex(where: { $0.id == id }) {
             let pill = pills[index]
+            // TODO: in theory, having a pill sticking up past the "first" row should be possible?
+            /// also, can maybe make this part of pillHasSpace? make it optional return,
+            /// and return nil if the issue is the top of the stage.
             if (row - 1) < 0  || !pill.isHorizontal && row - 2 < 0 {
                 print("Game Over")
                 self.stopGameLoop()
@@ -173,8 +175,9 @@ class Game: ObservableObject {
     private func gameTick() {
         for i in pills.indices {
             let pill = pills[i]
-            if pill.row == nil { // checks if placed
-                pills[i].y += 0.5 // try other values
+            if pill.row == nil {
+                // TODO: try other values for falling speed
+                pills[i].y += 0.5
                 var colsOccupied: [Int] = []
                 var rowsOccupied: [Int] = []
                 let mainCol = colPillOccupying(x: pill.x)
@@ -194,7 +197,7 @@ class Game: ObservableObject {
                 }
             }
             
-            // handle horizontal and vertical separately?
+            // tmp
             if pill.y > 525 { stopGameLoop() }
         }
     }
