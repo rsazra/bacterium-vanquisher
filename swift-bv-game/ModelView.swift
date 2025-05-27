@@ -43,33 +43,87 @@ class Game: ObservableObject {
         }
     }
     
+    func startGameLoop() {
+        // try other values for tick time
+        timer = Timer.publish(every: 0.1, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                self?.gameTick()
+            }
+    }
+    
+    func stopGameLoop() {
+        timer?.cancel()
+        timer = nil
+    }
+    
     func rotatePill(id: UUID) {
         if let index = pills.firstIndex(where: { $0.id == id }) {
+            // do not rotate placed pills!
+            if pills[index].row != nil { return }
+            
             pills[index].rotation = pills[index].rotation.next()
             pills[index].x > 250 ? pills[index].x = 250 : nil
+            // TODO: generalize this
             /// the above line should be even more general -- if there is no space to rotate,
-            /// should check if we can rotate + move one space to the side. TODO
+            /// should check if we can rotate + move one space to the side.
         }
     }
     
     func movePill(id: UUID, newX: CGFloat, newY: CGFloat) {
         if let index = pills.firstIndex(where: { $0.id == id }) {
+            var pill = pills[index]
+            // x
             let rotationOffset = pills[index].isHorizontal ? 0 : baseSize
             var setX = newX + rotationOffset/2
+            
+            /// keep within grid bounds
             if (setX < baseSize) {
                 setX = baseSize
             }
             else if (setX > CGFloat(stageCols - 1) * baseSize + rotationOffset) {
                 setX = CGFloat(stageCols - 1) * baseSize + rotationOffset
             }
-            pills[index].x = setX
-            if pills[index].y <= newY {
-                pills[index].y = newY
+            
+            // y
+            // TODO: dont go past the bottom of the stage
+            var setY = newY
+            if setY < pill.y {
+                setY = pill.y
             }
+            
+            // collision
+            let newCol = colPillOccupying(x: setX)
+            let newRow = rowPillOccupying(y: setY)
+            if pillHasSpace(row: newRow, col: newCol, isHorizontal: pill.isHorizontal) {
+                pill.x = setX
+                pill.y = setY
+                pills[index] = pill
+            }
+            
         }
     }
     
-    func rowPillOccupying(y: CGFloat) -> Int {
+    func snapPillToCol(id: UUID) {
+        if let index = pills.firstIndex(where: { $0.id == id }) {
+            let setX = baseSize * CGFloat(colPillOccupying(x: pills[index].x) + 1)
+            pills[index].x = setX
+        }
+    }
+    
+    private func pillHasSpace(row: Int, col: Int, isHorizontal: Bool) -> Bool {
+        if !isHorizontal && row-1 < 0 {
+            return false
+        }
+        if stage[row][col] != nil
+            || isHorizontal && stage[row][col+1] != nil
+            || !isHorizontal && stage[row-1][col] != nil {
+            return false
+        }
+        return true
+    }
+    
+    private func rowPillOccupying(y: CGFloat) -> Int {
         let yOffset = y - yBaseline // can adjust overlap with this
         for i in 0...9 {
             if yOffset < (baseSize * CGFloat(i)) {
@@ -79,7 +133,7 @@ class Game: ObservableObject {
         return 10
     }
     
-    func colPillOccupying(x: CGFloat) -> Int {
+    private func colPillOccupying(x: CGFloat) -> Int {
         /// different strategy from above. which is better?
         switch x {
         case ..<(baseSize + xBaseline):
@@ -96,15 +150,8 @@ class Game: ObservableObject {
             return 5
         }
     }
-    
-    func snapPillToCol(id: UUID) {
-        if let index = pills.firstIndex(where: { $0.id == id }) {
-            let setX = baseSize * CGFloat(colPillOccupying(x: pills[index].x) + 1)
-            pills[index].x = setX
-        }
-    }
 
-    func placePillAbove(id: UUID, row: Int, col: Int) {
+    private func placePillAbove(id: UUID, row: Int, col: Int) {
         print("Placing", id, row, col)
         if let index = pills.firstIndex(where: { $0.id == id }) {
             let pill = pills[index]
@@ -113,28 +160,14 @@ class Game: ObservableObject {
                 self.stopGameLoop()
                 return
             }
-            if stage[row-1][col] != nil
-                || pill.isHorizontal && stage[row-1][col+1] != nil
-                || !pill.isHorizontal && stage[row-2][col] != nil {
+            if pillHasSpace(row: row-1, col: col, isHorizontal: pill.isHorizontal) {
+                pills[index].row = row
+                pills[index].col = col
+            }
+            else {
                 placePillAbove(id: id, row: row-1 , col: col)
             }
-            pills[index].row = row
-            pills[index].col = col
         }
-    }
-    
-    func startGameLoop() {
-        // try other values for tick time
-        timer = Timer.publish(every: 0.1, on: .main, in: .common)
-            .autoconnect()
-            .sink { [weak self] _ in
-                self?.gameTick()
-            }
-    }
-    
-    func stopGameLoop() {
-        timer?.cancel()
-        timer = nil
     }
     
     private func gameTick() {
