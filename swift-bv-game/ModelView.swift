@@ -48,6 +48,47 @@ class Game: ObservableObject {
         }
     }
     
+    private func checkAround(row: Int, col: Int, color: VirusColor?) {
+        if color == nil { return }
+        
+        // TODO: figure out why this is an error. i'd rather use a set.
+        /// right now, this will include duplicates when connecting over 4 in a row
+//        var toPop: Set<(Int, Int)> = []
+        var toPop: [(Int, Int)] = []
+        
+        // vertical
+        for i in 0..<4 {
+            if (row + i - 3) >= 0, (row + i) < 12 {
+                if stage[row + i][col] == color,
+                   stage[row + i - 1][col] == color,
+                   stage[row + i - 2][col] == color,
+                   stage[row + i - 3][col] == color
+                {
+                    for j in 0..<4 {
+                        toPop.append((row + i - j, col))
+                    }
+                }
+            }
+        }
+        
+        // horizontal
+        for i in 0..<4 {
+            if (col + i - 3) >= 0, (col + i) < 6 {
+                if stage[row][col + i] == color,
+                   stage[row][col + i - 1] == color,
+                   stage[row][col + i - 2] == color,
+                   stage[row][col + i - 3] == color
+                {
+                    for j in 0..<4 {
+                        toPop.append((row, col + i - j))
+                    }
+                }
+            }
+        }
+        
+        print(toPop)
+    }
+    
     func startGameLoop() {
         // TODO: try other values for tick time
         timer = Timer.publish(every: 0.1, on: .main, in: .common)
@@ -68,8 +109,6 @@ class Game: ObservableObject {
             var pill = pills[index]
             if pill.row != nil { return }
             
-            // TODO: generalize this
-            /// if there is no space to rotate, check if we can rotate + move one space to the side.
             pill.rotation = pill.rotation.next()
             if pillHasSpace(row: rowPillOccupying(y: pill.y), col: colPillOccupying(x: pill.x), isHorizontal: pill.isHorizontal) {
                 pills[index] = pill
@@ -79,7 +118,6 @@ class Game: ObservableObject {
                 pills[index] = pill
             }
             snapPillToCol(id: id)
-//            pills[index].x > 250 ? pills[index].x = 250 : nil
         }
     }
     
@@ -180,19 +218,28 @@ class Game: ObservableObject {
             if pillHasSpace(row: row-1, col: col, isHorizontal: pill.isHorizontal) {
                 pills[index].row = row
                 pills[index].col = col
+                // TODO: refactor this switch case. ugly.
                 switch pill.rotation {
                 case .one:
                     stage[row-1][col] = pill.piece1.color
+                    checkAround(row: row-1, col: col, color: pill.piece1.color)
                     stage[row-1][col+1] = pill.piece2?.color
+                    checkAround(row: row-1, col: col+1, color: pill.piece2?.color)
                 case .two:
                     stage[row-2][col] = pill.piece1.color
+                    checkAround(row: row-2, col: col, color: pill.piece1.color)
                     stage[row-1][col] = pill.piece2?.color
+                    checkAround(row: row-1, col: col, color: pill.piece2?.color)
                 case .three:
                     stage[row-1][col+1] = pill.piece1.color
+                    checkAround(row: row-1, col: col+1, color: pill.piece1.color)
                     stage[row-1][col] = pill.piece2?.color
+                    checkAround(row: row-1, col: col, color: pill.piece2?.color)
                 case .four:
                     stage[row-1][col] = pill.piece1.color
+                    checkAround(row: row-1, col: col, color: pill.piece1.color)
                     stage[row-2][col] = pill.piece2?.color
+                    checkAround(row: row-2, col: col, color: pill.piece2?.color)
                 }
                 if let i = currentWave.firstIndex(of: id) {
                     currentWave.remove(at: i)
