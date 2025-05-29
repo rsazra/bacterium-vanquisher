@@ -12,13 +12,18 @@ class Game: ObservableObject {
     private var timer: AnyCancellable?
     
     private var stage: [[VirusColor?]] = Array(repeating: Array(repeating: nil, count: stageCols), count: stageRows)
-    @Published var viruses: [Virus] = []
+    private var currentWave: [UUID] = []
     @Published var nextPill: Pill
     @Published var pills: [Pill] = []
+    @Published var viruses: [Virus] = []
+    
     
     init() {
+        let mainPill = Pill()
+        
         nextPill = Pill()
-        pills.append(Pill())
+        pills.append(mainPill)
+        currentWave.append(mainPill.id)
         seed()
     }
     
@@ -151,13 +156,12 @@ class Game: ObservableObject {
     }
 
     private func placePillAbove(id: UUID, row: Int, col: Int) {
-        print("Placing", id, row, col)
         if let index = pills.firstIndex(where: { $0.id == id }) {
             let pill = pills[index]
             // TODO: in theory, having a pill sticking up past the "first" row should be possible?
             /// also, can maybe make this part of pillHasSpace? make it optional return,
             /// and return nil if the issue is the top of the stage.
-            if (row - 1) < 0  || !pill.isHorizontal && row - 2 < 0 {
+            if row == 0  || !pill.isHorizontal && row == 1 {
                 print("Game Over")
                 self.stopGameLoop()
                 return
@@ -165,6 +169,23 @@ class Game: ObservableObject {
             if pillHasSpace(row: row-1, col: col, isHorizontal: pill.isHorizontal) {
                 pills[index].row = row
                 pills[index].col = col
+                switch pill.rotation {
+                case .one:
+                    stage[row-1][col] = pill.piece1.color
+                    stage[row-1][col+1] = pill.piece2?.color
+                case .two:
+                    stage[row-2][col] = pill.piece1.color
+                    stage[row-1][col] = pill.piece2?.color
+                case .three:
+                    stage[row-1][col+1] = pill.piece1.color
+                    stage[row-1][col] = pill.piece2?.color
+                case .four:
+                    stage[row-1][col] = pill.piece1.color
+                    stage[row-2][col] = pill.piece2?.color
+                }
+                if let i = currentWave.firstIndex(of: id) {
+                    currentWave.remove(at: i)
+                }
             }
             else {
                 placePillAbove(id: id, row: row-1 , col: col)
@@ -173,6 +194,11 @@ class Game: ObservableObject {
     }
     
     private func gameTick() {
+        if currentWave.isEmpty {
+            let newPill = Pill()
+            currentWave.append(newPill.id)
+            pills.append(newPill)
+        }
         for i in pills.indices {
             let pill = pills[i]
             if pill.row == nil {
@@ -186,12 +212,12 @@ class Game: ObservableObject {
                 rowsOccupied.append(mainRow)
                 pill.isHorizontal ? colsOccupied.append(mainCol + 1) : rowsOccupied.append(mainRow - 1)
                 
-                for row in rowsOccupied {
+                rowLoop: for row in rowsOccupied {
                     for col in colsOccupied {
                         /// index out of range error here when passing row 6 i think
                         if stage[row][col] != nil {
-                            print("interesecting", row, col)
                             placePillAbove(id: pill.id, row: mainRow, col: mainCol)
+                            break rowLoop
                         }
                     }
                 }
