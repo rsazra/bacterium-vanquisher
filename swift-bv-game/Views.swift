@@ -40,7 +40,7 @@ struct DrawViruses: View {
     var body: some View {
         ForEach(viruses, id: \.self) { virus in
             VirusView(color: virus.color.color)
-                .position(CGPoint(x: virus.col * Int(baseSize) + Int(xBaseline), y: virus.row * Int(baseSize) + Int(yBaseline)))
+                .position(CGPoint(x: virus.location.col * Int(baseSize) + Int(xBaseline), y: virus.location.row * Int(baseSize) + Int(yBaseline)))
         }
     }
 }
@@ -54,19 +54,19 @@ struct DrawPills: View {
     var body: some View {
         ForEach(pills) { pill in
             var px: CGFloat {
-                if pill.col == nil {
-                    pill.x
+                if let loc = pill.location {
+                    CGFloat(loc.col + 1) * baseSize
                 }
                 else {
-                    CGFloat(pill.col! + 1) * baseSize
+                    pill.x
                 }
             }
             var py: CGFloat {
-                if pill.row == nil {
+                if pill.location == nil {
                     pill.y
                 }
                 else {
-                    CGFloat(pill.row! * Int(baseSize) - Int(yBaseline))
+                    CGFloat(pill.location!.row * Int(baseSize) - Int(yBaseline))
                 }
             }
             var angle: (Angle, UnitPoint) {

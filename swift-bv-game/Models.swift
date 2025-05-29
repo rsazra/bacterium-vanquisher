@@ -19,6 +19,7 @@ extension Rotation {
         case .two: return .three
         case .three: return .four
         case .four: return .one
+//        case .single: return .single
         }
         /// not sure why this doesn't work? is this way just better anyways?
         //        let allCases = Rotation.allCases
@@ -48,6 +49,20 @@ enum VirusColor: CaseIterable {
     }
 }
 
+struct Location: Hashable {
+    var row: Int
+    var col: Int
+    
+    init(_ row: Int, _ col: Int) {
+        self.row = row
+        self.col = col
+    }
+    init(tup: (Int, Int)) {
+        self.row = tup.0
+        self.col = tup.1
+    }
+}
+
 struct PillPiece: Hashable {
     let color: VirusColor
     
@@ -73,8 +88,7 @@ struct Pill: Identifiable {
         return rotation == .one || rotation == .three
     }
     
-    var row: Int?
-    var col: Int?
+    var location: Location?
     
     var x: CGFloat
     var y: CGFloat
@@ -85,8 +99,7 @@ struct Pill: Identifiable {
         piece2 = PillPiece()
         rotation = .one
         // these being nil means it is falling
-        row = nil
-        col = nil
+        location = nil
         // spawn point
         x = CGFloat(stageCols) * baseSize / 2
         y = CGFloat(yBaseline)
@@ -95,6 +108,5 @@ struct Pill: Identifiable {
 
 struct Virus: Hashable {
     let color: VirusColor
-    let row: Int
-    let col: Int
+    let location: Location
 }

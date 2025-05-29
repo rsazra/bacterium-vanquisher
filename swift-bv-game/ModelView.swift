@@ -39,7 +39,7 @@ class Game: ObservableObject {
                 
                 if let addition = options.randomElement() {
                     if addition != nil {
-                        let v = Virus(color: addition!, row: rowIndex, col: colIndex)
+                        let v = Virus(color: addition!, location: Location(rowIndex, colIndex))
                         viruses.append(v)
                         stage[rowIndex][colIndex] = v.color
                     }
@@ -48,13 +48,13 @@ class Game: ObservableObject {
         }
     }
     
-    private func checkAround(row: Int, col: Int, color: VirusColor?) {
+    private func checkAround(loc: Location) {
+        let row = loc.row
+        let col = loc.col
+        let color = stage[row][col]
         if color == nil { return }
         
-        // TODO: figure out why this is an error. i'd rather use a set.
-        /// right now, this will include duplicates when connecting over 4 in a row
-//        var toPop: Set<(Int, Int)> = []
-        var toPop: [(Int, Int)] = []
+        var toPop: Set<Location> = []
         
         // vertical
         for i in 0..<4 {
@@ -65,7 +65,7 @@ class Game: ObservableObject {
                    stage[row + i - 3][col] == color
                 {
                     for j in 0..<4 {
-                        toPop.append((row + i - j, col))
+                        toPop.insert(Location(row + i - j, col))
                     }
                 }
             }
@@ -80,7 +80,7 @@ class Game: ObservableObject {
                    stage[row][col + i - 3] == color
                 {
                     for j in 0..<4 {
-                        toPop.append((row, col + i - j))
+                        toPop.insert(Location(row, col + i - j))
                     }
                 }
             }
@@ -107,13 +107,15 @@ class Game: ObservableObject {
         if let index = pills.firstIndex(where: { $0.id == id }) {
             // do not rotate placed pills!
             var pill = pills[index]
-            if pill.row != nil { return }
+            if pill.location != nil { return }
             
             pill.rotation = pill.rotation.next()
-            if pillHasSpace(row: rowPillOccupying(y: pill.y), col: colPillOccupying(x: pill.x), isHorizontal: pill.isHorizontal) {
+            let curRow = rowPillOccupying(y: pill.y)
+            let curCol = colPillOccupying(x: pill.x)
+            if pillHasSpace(loc: Location(curRow, curCol), isHorizontal: pill.isHorizontal) {
                 pills[index] = pill
             }
-            else if pillHasSpace(row: rowPillOccupying(y: pill.y), col: (colPillOccupying(x: pill.x) - 1), isHorizontal: pill.isHorizontal) {
+            else if pillHasSpace(loc: Location(curRow, curCol - 1), isHorizontal: pill.isHorizontal) {
                 pill.x -= baseSize
                 pills[index] = pill
             }
@@ -146,7 +148,7 @@ class Game: ObservableObject {
             // collision
             let newCol = colPillOccupying(x: setX)
             let newRow = rowPillOccupying(y: setY)
-            if pillHasSpace(row: newRow, col: newCol, isHorizontal: pill.isHorizontal) {
+            if pillHasSpace(loc: Location(newRow, newCol), isHorizontal: pill.isHorizontal) {
                 pill.x = setX
                 pill.y = setY
                 pills[index] = pill
@@ -162,7 +164,10 @@ class Game: ObservableObject {
         }
     }
     
-    private func pillHasSpace(row: Int, col: Int, isHorizontal: Bool) -> Bool {
+    private func pillHasSpace(loc: Location, isHorizontal: Bool) -> Bool {
+        let row = loc.row
+        let col = loc.col
+        
         if (!isHorizontal && row-1 < 0)
             || col < 0
             || isHorizontal && col+1 > 5 {
@@ -204,7 +209,10 @@ class Game: ObservableObject {
         }
     }
 
-    private func placePillAbove(id: UUID, row: Int, col: Int) {
+    private func placePillAbove(id: UUID, loc: Location) {
+        let row = loc.row
+        let col = loc.col
+        
         if let index = pills.firstIndex(where: { $0.id == id }) {
             let pill = pills[index]
             // TODO: in theory, having a pill sticking up past the "first" row should be possible?
@@ -215,38 +223,39 @@ class Game: ObservableObject {
                 self.stopGameLoop()
                 return
             }
-            if pillHasSpace(row: row-1, col: col, isHorizontal: pill.isHorizontal) {
-                pills[index].row = row
-                pills[index].col = col
-                // TODO: refactor this switch case. ugly.
+            if pillHasSpace(loc: Location(row-1, col), isHorizontal: pill.isHorizontal) {
+                pills[index].location = Location(row, col)
+                var loc1: Location
+                var loc2: Location?
+                
                 switch pill.rotation {
                 case .one:
-                    stage[row-1][col] = pill.piece1.color
-                    checkAround(row: row-1, col: col, color: pill.piece1.color)
-                    stage[row-1][col+1] = pill.piece2?.color
-                    checkAround(row: row-1, col: col+1, color: pill.piece2?.color)
+                    loc1 = Location(row-1, col)
+                    loc2 = Location(row-1, col+1)
                 case .two:
-                    stage[row-2][col] = pill.piece1.color
-                    checkAround(row: row-2, col: col, color: pill.piece1.color)
-                    stage[row-1][col] = pill.piece2?.color
-                    checkAround(row: row-1, col: col, color: pill.piece2?.color)
+                    loc1 = Location(row-2, col)
+                    loc2 = Location(row-1, col)
                 case .three:
-                    stage[row-1][col+1] = pill.piece1.color
-                    checkAround(row: row-1, col: col+1, color: pill.piece1.color)
-                    stage[row-1][col] = pill.piece2?.color
-                    checkAround(row: row-1, col: col, color: pill.piece2?.color)
+                    loc1 = Location(row-1, col+1)
+                    loc2 = Location(row-1, col)
                 case .four:
-                    stage[row-1][col] = pill.piece1.color
-                    checkAround(row: row-1, col: col, color: pill.piece1.color)
-                    stage[row-2][col] = pill.piece2?.color
-                    checkAround(row: row-2, col: col, color: pill.piece2?.color)
+                    loc1 = Location(row-1, col)
+                    loc2 = Location(row-2, col)
                 }
+                
+                stage[loc1.row][loc1.col] = pill.piece1.color
+                if let loc = loc2 {
+                    stage[loc.row][loc.col] = pill.piece2?.color
+                    checkAround(loc: loc)
+                }
+                checkAround(loc: loc1)
+                
                 if let i = currentWave.firstIndex(of: id) {
                     currentWave.remove(at: i)
                 }
             }
             else {
-                placePillAbove(id: id, row: row-1 , col: col)
+                placePillAbove(id: id, loc: Location(row-1, col))
             }
         }
     }
@@ -259,7 +268,7 @@ class Game: ObservableObject {
         }
         for i in pills.indices {
             let pill = pills[i]
-            if pill.row == nil {
+            if pill.location == nil {
                 // TODO: try other values for falling speed
                 pills[i].y += 0.5
                 var colsOccupied: [Int] = []
@@ -274,7 +283,7 @@ class Game: ObservableObject {
                     for col in colsOccupied {
                         /// index out of range error here when passing row 6 i think
                         if stage[row][col] != nil {
-                            placePillAbove(id: pill.id, row: mainRow, col: mainCol)
+                            placePillAbove(id: pill.id, loc: Location(mainRow, mainCol))
                             break rowLoop
                         }
                     }
