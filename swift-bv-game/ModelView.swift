@@ -34,7 +34,7 @@ class Game: ObservableObject {
     private func seed() {
         for (rowIndex, rowContents) in stage.enumerated() {
             for (colIndex, _) in rowContents.enumerated() {
-                if rowIndex < 3 { continue }
+                if rowIndex < 4 { continue }
                 let options = [nil, VirusColor.red, VirusColor.yellow, VirusColor.blue]
                 
                 if let addition = options.randomElement() {
@@ -65,12 +65,21 @@ class Game: ObservableObject {
     func rotatePill(id: UUID) {
         if let index = pills.firstIndex(where: { $0.id == id }) {
             // do not rotate placed pills!
-            if pills[index].row != nil { return }
+            var pill = pills[index]
+            if pill.row != nil { return }
             
             // TODO: generalize this
             /// if there is no space to rotate, check if we can rotate + move one space to the side.
-            pills[index].rotation = pills[index].rotation.next()
-            pills[index].x > 250 ? pills[index].x = 250 : nil
+            pill.rotation = pill.rotation.next()
+            if pillHasSpace(row: rowPillOccupying(y: pill.y), col: colPillOccupying(x: pill.x), isHorizontal: pill.isHorizontal) {
+                pills[index] = pill
+            }
+            else if pillHasSpace(row: rowPillOccupying(y: pill.y), col: (colPillOccupying(x: pill.x) - 1), isHorizontal: pill.isHorizontal) {
+                pill.x -= baseSize
+                pills[index] = pill
+            }
+            snapPillToCol(id: id)
+//            pills[index].x > 250 ? pills[index].x = 250 : nil
         }
     }
     
@@ -116,7 +125,9 @@ class Game: ObservableObject {
     }
     
     private func pillHasSpace(row: Int, col: Int, isHorizontal: Bool) -> Bool {
-        if !isHorizontal && row-1 < 0 {
+        if (!isHorizontal && row-1 < 0)
+            || col < 0
+            || isHorizontal && col+1 > 5 {
             return false
         }
         if stage[row][col] != nil
