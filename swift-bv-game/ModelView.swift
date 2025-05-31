@@ -276,7 +276,6 @@ class Game: ObservableObject {
                     loc1 = Location(row-1, col)
                     loc2 = Location(row-2, col)
                 }
-                
                 pill.location = loc1
                 stage[loc1.row][loc1.col] = pill.piece1
                 if let loc = loc2 {
