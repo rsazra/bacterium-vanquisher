@@ -56,14 +56,12 @@ struct DrawPills: View {
             var px: CGFloat {
                 if let loc = pill.location {
                     CGFloat(loc.col + 1) * baseSize
-                }
-                else { pill.x }
+                } else { pill.x }
             }
             var py: CGFloat {
                 if let loc  = pill.location {
                     CGFloat((loc.row + 1) * Int(baseSize) - Int(yBaseline))
-                }
-                else { pill.y }
+                } else { pill.y }
             }
             var angle: (Angle, UnitPoint) {
                 switch pill.rotation {
