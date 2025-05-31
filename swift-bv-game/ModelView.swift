@@ -13,6 +13,7 @@ class Game: ObservableObject {
     
     private var stage: [[HasColor?]] = Array(repeating: Array(repeating: nil, count: stageCols), count: stageRows)
     private var currentWave: [UUID] = []
+    private var toPop: Set<Location> = []
     @Published var nextPill: Pill
     @Published var pills: [Pill] = []
     @Published var viruses: [Virus] = []
@@ -54,7 +55,7 @@ class Game: ObservableObject {
         let color = stage[row][col]?.color
         if color == nil { return }
         
-        var toPop: Set<Location> = []
+//        var toPop: Set<Location> = []
         
         // vertical
         for i in 0..<4 {
@@ -85,45 +86,6 @@ class Game: ObservableObject {
                 }
             }
         }
-        
-        print(toPop)
-        for loc in toPop {
-            let popped = stage[loc.row][loc.col]
-            // remove viruses from virus list
-            if popped is Virus {
-                if let index = viruses.firstIndex(of: popped as! Virus) {
-                    viruses.remove(at: index)
-                }
-            }
-            // pop individual pill pieces (!)
-            // if pill empty, remove from pill list
-            if popped is PillPiece {
-                if let index = pills.firstIndex(where: { $0.id == (popped as! PillPiece).parentPillID }) {
-                    var pill = pills[index]
-                    if pill.piece2 == nil {
-                        // just remove from pill list
-                        pills.remove(at: index)
-                        continue
-                    } else if loc == pill.location {
-                        // that means this is piece1
-                        pill.piece1 = pill.piece2!
-                        pill.piece2 = nil
-                        pill.location = pill.secondaryLocation!
-                        pill.secondaryLocation = nil
-                    } else {
-                        // this means it is piece2
-                        pill.piece2 = nil
-                        pill.secondaryLocation = nil
-                    }
-                    pills[index] = pill
-                }
-            }
-            stage[loc.row][loc.col] = nil
-        }
-        
-        /// make unsupported pills start falling again or should this just be
-        /// part of gameTick? might be easier, but cause superfluous checks?
-        // TODO: try both
     }
     
     func startGameLoop() {
@@ -223,7 +185,7 @@ class Game: ObservableObject {
         let yOffset = y - yBaseline // adjust overlap allowance with this?
         for i in 0..<(stageRows-1) {
             if yOffset < (baseSize * CGFloat(i)) {
-                return i-1
+                return i
             }
         }
         return (stageRows-1)
@@ -242,6 +204,7 @@ class Game: ObservableObject {
     private func placePillAbove(id: UUID, loc: Location) {
         let row = loc.row
         let col = loc.col
+        print("placing", row, col)
         
         if let index = pills.firstIndex(where: { $0.id == id }) {
             var pill = pills[index]
@@ -280,6 +243,7 @@ class Game: ObservableObject {
                 }
                 checkAround(loc: loc1)
                 
+                pills[index] = pill
                 if let i = currentWave.firstIndex(of: id) {
                     currentWave.remove(at: i)
                 }
@@ -321,8 +285,48 @@ class Game: ObservableObject {
                 // check if space below is empty. if so, start falling again.
             }
             
+            /// make unsupported pills start falling again or should this just be
+            /// part of gameTick? might be easier, but cause superfluous checks?
+            // TODO: try both
+            
             // tmp
             if pill.y > 525 { stopGameLoop() }
         }
+        
+//        print(toPop)
+        for loc in toPop {
+            let popped = stage[loc.row][loc.col]
+            // remove viruses from virus list
+            if popped is Virus {
+                if let index = viruses.firstIndex(of: popped as! Virus) {
+                    viruses.remove(at: index)
+                }
+            }
+            // pop individual pill pieces (!)
+            // if pill empty, remove from pill list
+            if popped is PillPiece {
+                if let index = pills.firstIndex(where: { $0.id == (popped as! PillPiece).parentPillID }) {
+                    var pill = pills[index]
+                    if pill.piece2 == nil {
+                        // just remove from pill list
+                        pills.remove(at: index)
+                        continue
+                    } else if loc == pill.location {
+                        // that means this is piece1
+                        pill.piece1 = pill.piece2!
+                        pill.piece2 = nil
+                        pill.location = pill.secondaryLocation!
+                        pill.secondaryLocation = nil
+                    } else {
+                        // this means it is piece2
+                        pill.piece2 = nil
+                        pill.secondaryLocation = nil
+                    }
+                    pills[index] = pill
+                }
+            }
+            stage[loc.row][loc.col] = nil
+        }
+        
     }
 }
