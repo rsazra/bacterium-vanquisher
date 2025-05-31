@@ -65,9 +65,11 @@ struct Location: Hashable {
 
 struct PillPiece: HasColor, Hashable {
     let color: VirusColor
+    let id: UUID
     let parentPillID: UUID
     
     init(id: UUID) {
+        self.id = UUID()
         guard let addition = VirusColor.allCases.randomElement() else {
             fatalError()
         }
@@ -92,7 +94,7 @@ struct Pill: Identifiable {
     
     var location: Location?
     // where piece2 is
-    var secondaryLocation: Location?
+//    var secondaryLocation: Location?
     
     var x: CGFloat
     var y: CGFloat
@@ -104,7 +106,7 @@ struct Pill: Identifiable {
         rotation = .one
         // these being nil means it is falling
         location = nil
-        secondaryLocation = nil
+//        secondaryLocation = nil
         // spawn point
         x = CGFloat(stageCols) * baseSize / 2
         y = CGFloat(yBaseline)

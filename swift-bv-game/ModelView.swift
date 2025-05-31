@@ -204,6 +204,7 @@ class Game: ObservableObject {
     private func placePillAbove(id: UUID, loc: Location) {
         let row = loc.row
         let col = loc.col
+        let spaceAbove = Location(row-1, col)
         print("placing", row, col)
         
         if let index = pills.firstIndex(where: { $0.id == id }) {
@@ -216,33 +217,34 @@ class Game: ObservableObject {
                 self.stopGameLoop()
                 return
             }
-            if pillHasSpace(loc: Location(row-1, col), isHorizontal: pill.isHorizontal) {
+            if pillHasSpace(loc: spaceAbove, isHorizontal: pill.isHorizontal) {
                 var loc1: Location
                 var loc2: Location?
                 
                 switch pill.rotation {
                 case .one:
-                    loc1 = Location(row-1, col)
+                    loc1 = spaceAbove
                     loc2 = Location(row-1, col+1)
                 case .two:
                     loc1 = Location(row-2, col)
-                    loc2 = Location(row-1, col)
+                    loc2 = spaceAbove
                 case .three:
                     loc1 = Location(row-1, col+1)
-                    loc2 = Location(row-1, col)
+                    loc2 = spaceAbove
                 case .four:
-                    loc1 = Location(row-1, col)
+                    loc1 = spaceAbove
                     loc2 = Location(row-2, col)
                 }
-                pill.location = loc1
                 stage[loc1.row][loc1.col] = pill.piece1
+//                pill.location = loc1
                 if let loc = loc2 {
-                    pill.secondaryLocation = loc2
+//                    pill.secondaryLocation = loc2
                     stage[loc.row][loc.col] = pill.piece2
                     checkAround(loc: loc)
                 }
                 checkAround(loc: loc1)
                 
+                pill.location = spaceAbove
                 pills[index] = pill
                 if let i = currentWave.firstIndex(of: id) {
                     currentWave.remove(at: i)
@@ -311,16 +313,16 @@ class Game: ObservableObject {
                         // just remove from pill list
                         pills.remove(at: index)
                         continue
-                    } else if loc == pill.location {
+                    } else if (popped as! PillPiece).id == pill.piece1.id {
                         // that means this is piece1
                         pill.piece1 = pill.piece2!
                         pill.piece2 = nil
-                        pill.location = pill.secondaryLocation!
-                        pill.secondaryLocation = nil
+//                        pill.location = pill.secondaryLocation!
+//                        pill.secondaryLocation = nil
                     } else {
                         // this means it is piece2
                         pill.piece2 = nil
-                        pill.secondaryLocation = nil
+//                        pill.secondaryLocation = nil
                     }
                     pills[index] = pill
                 }
