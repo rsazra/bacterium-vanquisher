@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 enum Rotation: CaseIterable {
-    case one, two, three, four
+    case one, two, three, four, single
 }
 
 extension Rotation {
@@ -19,7 +19,7 @@ extension Rotation {
         case .two: return .three
         case .three: return .four
         case .four: return .one
-//        case .single: return .single
+        case .single: return .single
         }
         /// not sure why this doesn't work? is this way just better anyways?
         //        let allCases = Rotation.allCases
@@ -88,7 +88,8 @@ struct Pill: Identifiable {
     var piece1: PillPiece
     var piece2: PillPiece?
     var rotation: Rotation
-    var isHorizontal: Bool {
+    var isHorizontal: Bool? {
+        if rotation == .single { return nil }
         return rotation == .one || rotation == .three
     }
     
@@ -104,6 +105,8 @@ struct Pill: Identifiable {
         piece1 = PillPiece(id: id)
         piece2 = PillPiece(id: id)
         rotation = .one
+            // tmp
+//        rotation = .single
         // these being nil means it is falling
         location = nil
 //        secondaryLocation = nil

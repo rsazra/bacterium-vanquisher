@@ -65,7 +65,7 @@ struct DrawPills: View {
             }
             var angle: (Angle, UnitPoint) {
                 switch pill.rotation {
-                case .one:
+                case .one, .single:
                     (.degrees(0), .center)
                 case .two:
                     (.degrees(90), .top)
@@ -73,10 +73,15 @@ struct DrawPills: View {
                     (.degrees(180), .center)
                 case .four:
                     (.degrees(270), .top)
+//                case .single:
+//
                 }
             }
             var transform: CGAffineTransform {
                 switch pill.rotation {
+                case .single:
+                    CGAffineTransform()
+//                        .translatedBy(x: -pillSize, y: 0)
                 case .one:
                     CGAffineTransform()
                 case .two:
@@ -124,6 +129,7 @@ struct PillView: View {
             Capsule()
                 .frame(width: size, height: size)
                 .foregroundColor(color1)
+                .offset(x: -CGFloat(size/2))
         }
         else {
             ZStack {

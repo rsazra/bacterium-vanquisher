@@ -126,7 +126,7 @@ class Game: ObservableObject {
         if let index = pills.firstIndex(where: { $0.id == id }) {
             var pill = pills[index]
             // x
-            let rotationOffset = pills[index].isHorizontal ? 0 : baseSize
+            let rotationOffset = pill.isHorizontal != nil ? ( pill.isHorizontal! ? 0 : baseSize ) : baseSize
             var setX = newX + rotationOffset/2
             
             /// keep within grid bounds
@@ -163,21 +163,26 @@ class Game: ObservableObject {
         }
     }
     
-    private func pillHasSpace(loc: Location, isHorizontal: Bool) -> Bool {
+    // kind of jank, i think this could be better
+    private func pillHasSpace(loc: Location, isHorizontal: Bool?) -> Bool {
         let row = loc.row
         let col = loc.col
         
-        if (!isHorizontal && row-1 < 0)
-            || col < 0
-            || isHorizontal && col+1 > 5 {
-            return false
+        if let horizontal = isHorizontal {
+            if (!horizontal && row-1 < 0)
+                || col < 0
+                || horizontal && col+1 > 5 {
+                return false
+            }
+            if stage[row][col] != nil
+                || horizontal && stage[row][col+1] != nil
+                || !horizontal && stage[row-1][col] != nil {
+                return false
+            }
+            return true
         }
-        if stage[row][col] != nil
-            || isHorizontal && stage[row][col+1] != nil
-            || !isHorizontal && stage[row-1][col] != nil {
-            return false
-        }
-        return true
+        
+        return stage[row][col] == nil
     }
     
     private func rowPillOccupying(y: CGFloat) -> Int {
@@ -212,7 +217,7 @@ class Game: ObservableObject {
             // TODO: in theory, having a pill sticking up past the "first" row should be possible?
             /// also, can maybe make this part of pillHasSpace? make it optional return,
             /// and return nil if the issue is the top of the stage.
-            if row == 0  || !pill.isHorizontal && row == 1 {
+            if row == 0  || pill.isHorizontal != true && row == 1 {
                 print("Game Over")
                 self.stopGameLoop()
                 return
@@ -234,6 +239,9 @@ class Game: ObservableObject {
                 case .four:
                     loc1 = spaceAbove
                     loc2 = Location(row-2, col)
+                case .single:
+                    loc1 = spaceAbove
+                    loc2 = nil
                 }
                 stage[loc1.row][loc1.col] = pill.piece1
 //                pill.location = loc1
@@ -260,6 +268,7 @@ class Game: ObservableObject {
             let newPill = Pill()
             currentWave.append(newPill.id)
             pills.append(newPill)
+            // TODO: check for game end here
         }
         for i in pills.indices {
             let pill = pills[i]
@@ -272,7 +281,9 @@ class Game: ObservableObject {
                 let mainRow = rowPillOccupying(y: pill.y)
                 colsOccupied.append(mainCol)
                 rowsOccupied.append(mainRow)
-                pill.isHorizontal ? colsOccupied.append(mainCol + 1) : rowsOccupied.append(mainRow - 1)
+                if let horizontal = pill.isHorizontal {
+                    horizontal ? colsOccupied.append(mainCol + 1) : rowsOccupied.append(mainRow - 1)
+                }
                 
                 rowLoop: for row in rowsOccupied {
                     for col in colsOccupied {
@@ -317,11 +328,13 @@ class Game: ObservableObject {
                         // that means this is piece1
                         pill.piece1 = pill.piece2!
                         pill.piece2 = nil
+                        pill.rotation = .single
 //                        pill.location = pill.secondaryLocation!
 //                        pill.secondaryLocation = nil
                     } else {
                         // this means it is piece2
                         pill.piece2 = nil
+                        pill.rotation = .single
 //                        pill.secondaryLocation = nil
                     }
                     pills[index] = pill
@@ -329,6 +342,6 @@ class Game: ObservableObject {
             }
             stage[loc.row][loc.col] = nil
         }
-        
+        toPop.removeAll()
     }
 }
