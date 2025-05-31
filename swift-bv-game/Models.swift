@@ -63,7 +63,7 @@ struct Location: Hashable {
     }
 }
 
-struct PillPiece: Hashable {
+struct PillPiece: HasColor, Hashable {
     let color: VirusColor
     
     init() {
@@ -106,7 +106,11 @@ struct Pill: Identifiable {
     }
 }
 
-struct Virus: Hashable {
+struct Virus: HasColor, Hashable {
     let color: VirusColor
     let location: Location
+}
+
+protocol HasColor {
+    var color: VirusColor { get }
 }

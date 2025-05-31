@@ -11,7 +11,7 @@ import Foundation
 class Game: ObservableObject {
     private var timer: AnyCancellable?
     
-    private var stage: [[VirusColor?]] = Array(repeating: Array(repeating: nil, count: stageCols), count: stageRows)
+    private var stage: [[HasColor?]] = Array(repeating: Array(repeating: nil, count: stageCols), count: stageRows)
     private var currentWave: [UUID] = []
     @Published var nextPill: Pill
     @Published var pills: [Pill] = []
@@ -41,7 +41,7 @@ class Game: ObservableObject {
                     if addition != nil {
                         let v = Virus(color: addition!, location: Location(rowIndex, colIndex))
                         viruses.append(v)
-                        stage[rowIndex][colIndex] = v.color
+                        stage[rowIndex][colIndex] = v
                     }
                 }
             }
@@ -51,7 +51,7 @@ class Game: ObservableObject {
     private func checkAround(loc: Location) {
         let row = loc.row
         let col = loc.col
-        let color = stage[row][col]
+        let color = stage[row][col]?.color
         if color == nil { return }
         
         var toPop: Set<Location> = []
@@ -59,10 +59,10 @@ class Game: ObservableObject {
         // vertical
         for i in 0..<4 {
             if (row + i - 3) >= 0, (row + i) < 12 {
-                if stage[row + i][col] == color,
-                   stage[row + i - 1][col] == color,
-                   stage[row + i - 2][col] == color,
-                   stage[row + i - 3][col] == color
+                if stage[row + i][col]?.color == color,
+                   stage[row + i - 1][col]?.color == color,
+                   stage[row + i - 2][col]?.color == color,
+                   stage[row + i - 3][col]?.color == color
                 {
                     for j in 0..<4 {
                         toPop.insert(Location(row + i - j, col))
@@ -74,10 +74,10 @@ class Game: ObservableObject {
         // horizontal
         for i in 0..<4 {
             if (col + i - 3) >= 0, (col + i) < 6 {
-                if stage[row][col + i] == color,
-                   stage[row][col + i - 1] == color,
-                   stage[row][col + i - 2] == color,
-                   stage[row][col + i - 3] == color
+                if stage[row][col + i]?.color == color,
+                   stage[row][col + i - 1]?.color == color,
+                   stage[row][col + i - 2]?.color == color,
+                   stage[row][col + i - 3]?.color == color
                 {
                     for j in 0..<4 {
                         toPop.insert(Location(row, col + i - j))
@@ -243,9 +243,9 @@ class Game: ObservableObject {
                     loc2 = Location(row-2, col)
                 }
                 
-                stage[loc1.row][loc1.col] = pill.piece1.color
+                stage[loc1.row][loc1.col] = pill.piece1
                 if let loc = loc2 {
-                    stage[loc.row][loc.col] = pill.piece2?.color
+                    stage[loc.row][loc.col] = pill.piece2
                     checkAround(loc: loc)
                 }
                 checkAround(loc: loc1)
