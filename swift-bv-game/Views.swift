@@ -62,11 +62,11 @@ struct DrawPills: View {
                 }
             }
             var py: CGFloat {
-                if pill.location == nil {
-                    pill.y
+                if let loc  = pill.location {
+                    CGFloat((loc.row + 1) * Int(baseSize) - Int(yBaseline))
                 }
                 else {
-                    CGFloat(pill.location!.row * Int(baseSize) - Int(yBaseline))
+                    pill.y
                 }
             }
             var angle: (Angle, UnitPoint) {

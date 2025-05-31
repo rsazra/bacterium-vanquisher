@@ -34,7 +34,7 @@ class Game: ObservableObject {
     private func seed() {
         for (rowIndex, rowContents) in stage.enumerated() {
             for (colIndex, _) in rowContents.enumerated() {
-                if rowIndex < 4 { continue }
+                if rowIndex < 5 { continue }
                 let options = [nil, VirusColor.red, VirusColor.yellow, VirusColor.blue]
                 
                 if let addition = options.randomElement() {
@@ -224,7 +224,7 @@ class Game: ObservableObject {
                 return
             }
             if pillHasSpace(loc: Location(row-1, col), isHorizontal: pill.isHorizontal) {
-                pills[index].location = Location(row, col)
+                pills[index].location = Location(row-1, col)
                 var loc1: Location
                 var loc2: Location?
                 
