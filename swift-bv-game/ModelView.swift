@@ -58,7 +58,7 @@ class Game: ObservableObject {
         
         // vertical
         for i in 0..<4 {
-            if (row + i - 3) >= 0, (row + i) < 12 {
+            if (row + i - 3) >= 0, (row + i) < stageRows {
                 if stage[row + i][col]?.color == color,
                    stage[row + i - 1][col]?.color == color,
                    stage[row + i - 2][col]?.color == color,
@@ -73,7 +73,7 @@ class Game: ObservableObject {
         
         // horizontal
         for i in 0..<4 {
-            if (col + i - 3) >= 0, (col + i) < 6 {
+            if (col + i - 3) >= 0, (col + i) < stageCols {
                 if stage[row][col + i]?.color == color,
                    stage[row][col + i - 1]?.color == color,
                    stage[row][col + i - 2]?.color == color,
@@ -183,30 +183,22 @@ class Game: ObservableObject {
     
     private func rowPillOccupying(y: CGFloat) -> Int {
         let yOffset = y - yBaseline // adjust overlap allowance with this?
-        for i in 0...9 {
+        for i in 0..<(stageRows-1) {
             if yOffset < (baseSize * CGFloat(i)) {
                 return i
             }
         }
-        return 10
+        return (stageRows-1)
     }
     
     private func colPillOccupying(x: CGFloat) -> Int {
-        /// different strategy from above. which is better?
-        switch x {
-        case ..<(baseSize + xBaseline):
-            return 0
-        case ..<(2 * baseSize + xBaseline):
-            return 1
-        case ..<(3 * baseSize + xBaseline):
-            return 2
-        case ..<(4 * baseSize + xBaseline):
-            return 3
-        case ..<(5 * baseSize + xBaseline):
-            return 4
-        default:
-            return 5
+        let xOffset = x - xBaseline // adjust overlap allowance with this?
+        for i in 0..<(stageCols-1) {
+            if xOffset < (baseSize * CGFloat(i + 1)) {
+                return i
+            }
         }
+        return (stageCols-1)
     }
 
     private func placePillAbove(id: UUID, loc: Location) {
