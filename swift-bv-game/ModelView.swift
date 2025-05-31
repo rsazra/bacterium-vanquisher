@@ -59,11 +59,6 @@ class Game: ObservableObject {
         // vertical
         for i in 0..<4 {
             if (row + i - 3) >= 0, (row + i) < stageRows {
-                print(color, row, col)
-                print(row + i, stage[row + i][col]?.color)
-                print(row + i - 1, stage[row + i - 1][col]?.color)
-                print(row + i - 2, stage[row + i - 2][col]?.color)
-                print(row + i - 3, stage[row + i - 3][col]?.color)
                 if stage[row + i][col]?.color == color,
                    stage[row + i - 1][col]?.color == color,
                    stage[row + i - 2][col]?.color == color,
@@ -226,22 +221,22 @@ class Game: ObservableObject {
     private func rowPillOccupying(y: CGFloat) -> Int {
         // TODO: need to double check functionality of this
         let yOffset = y - yBaseline // adjust overlap allowance with this?
-        for i in 1..<(stageCols-1) {
+        for i in 0..<(stageRows-1) {
             if yOffset < (baseSize * CGFloat(i)) {
                 return i-1
             }
         }
-        return stageCols-1
+        return (stageRows-1)
     }
     
     private func colPillOccupying(x: CGFloat) -> Int {
         let xOffset = x - xBaseline // adjust overlap allowance with this?
-        for i in 1..<(stageRows-1) {
-            if xOffset < (baseSize * CGFloat(i)) {
-                return i-1
+        for i in 0..<(stageCols-1) {
+            if xOffset < (baseSize * CGFloat(i + 1)) {
+                return i
             }
         }
-        return stageRows-1
+        return (stageCols-1)
     }
 
     private func placePillAbove(id: UUID, loc: Location) {
