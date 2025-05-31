@@ -59,7 +59,7 @@ struct DrawPills: View {
                 } else { pill.x }
             }
             var py: CGFloat {
-                if let loc  = pill.location {
+                if let loc = pill.location {
                     CGFloat((loc.row + 1) * Int(baseSize) - Int(yBaseline))
                 } else { pill.y }
             }
