@@ -11,7 +11,7 @@ import Foundation
 class Game: ObservableObject {
     private var timer: AnyCancellable?
     
-    private var stage: [[VirusColor?]] = Array(repeating: Array(repeating: nil, count: stageCols), count: stageRows)
+    private var stage: [[HasColor?]] = Array(repeating: Array(repeating: nil, count: stageCols), count: stageRows)
     private var currentWave: [UUID] = []
     @Published var nextPill: Pill
     @Published var pills: [Pill] = []
@@ -34,14 +34,14 @@ class Game: ObservableObject {
     private func seed() {
         for (rowIndex, rowContents) in stage.enumerated() {
             for (colIndex, _) in rowContents.enumerated() {
-                if rowIndex < 4 { continue }
+                if rowIndex < 5 { continue }
                 let options = [nil, VirusColor.red, VirusColor.yellow, VirusColor.blue]
                 
                 if let addition = options.randomElement() {
                     if addition != nil {
                         let v = Virus(color: addition!, location: Location(rowIndex, colIndex))
                         viruses.append(v)
-                        stage[rowIndex][colIndex] = v.color
+                        stage[rowIndex][colIndex] = v
                     }
                 }
             }
@@ -51,18 +51,23 @@ class Game: ObservableObject {
     private func checkAround(loc: Location) {
         let row = loc.row
         let col = loc.col
-        let color = stage[row][col]
+        let color = stage[row][col]?.color
         if color == nil { return }
         
         var toPop: Set<Location> = []
         
         // vertical
         for i in 0..<4 {
-            if (row + i - 3) >= 0, (row + i) < 12 {
-                if stage[row + i][col] == color,
-                   stage[row + i - 1][col] == color,
-                   stage[row + i - 2][col] == color,
-                   stage[row + i - 3][col] == color
+            if (row + i - 3) >= 0, (row + i) < stageRows {
+                print(color, row, col)
+                print(row + i, stage[row + i][col]?.color)
+                print(row + i - 1, stage[row + i - 1][col]?.color)
+                print(row + i - 2, stage[row + i - 2][col]?.color)
+                print(row + i - 3, stage[row + i - 3][col]?.color)
+                if stage[row + i][col]?.color == color,
+                   stage[row + i - 1][col]?.color == color,
+                   stage[row + i - 2][col]?.color == color,
+                   stage[row + i - 3][col]?.color == color
                 {
                     for j in 0..<4 {
                         toPop.insert(Location(row + i - j, col))
@@ -73,11 +78,11 @@ class Game: ObservableObject {
         
         // horizontal
         for i in 0..<4 {
-            if (col + i - 3) >= 0, (col + i) < 6 {
-                if stage[row][col + i] == color,
-                   stage[row][col + i - 1] == color,
-                   stage[row][col + i - 2] == color,
-                   stage[row][col + i - 3] == color
+            if (col + i - 3) >= 0, (col + i) < stageCols {
+                if stage[row][col + i]?.color == color,
+                   stage[row][col + i - 1]?.color == color,
+                   stage[row][col + i - 2]?.color == color,
+                   stage[row][col + i - 3]?.color == color
                 {
                     for j in 0..<4 {
                         toPop.insert(Location(row, col + i - j))
@@ -87,6 +92,43 @@ class Game: ObservableObject {
         }
         
         print(toPop)
+        for loc in toPop {
+            let popped = stage[loc.row][loc.col]
+            // remove viruses from virus list
+            if popped is Virus {
+                if let index = viruses.firstIndex(of: popped as! Virus) {
+                    viruses.remove(at: index)
+                }
+            }
+            // pop individual pill pieces (!)
+            // if pill empty, remove from pill list
+            if popped is PillPiece {
+                if let index = pills.firstIndex(where: { $0.id == (popped as! PillPiece).parentPillID }) {
+                    var pill = pills[index]
+                    if pill.piece2 == nil {
+                        // just remove from pill list
+                        pills.remove(at: index)
+                        continue
+                    } else if loc == pill.location {
+                        // that means this is piece1
+                        pill.piece1 = pill.piece2!
+                        pill.piece2 = nil
+                        pill.location = pill.secondaryLocation!
+                        pill.secondaryLocation = nil
+                    } else {
+                        // this means it is piece2
+                        pill.piece2 = nil
+                        pill.secondaryLocation = nil
+                    }
+                    pills[index] = pill
+                }
+            }
+            stage[loc.row][loc.col] = nil
+        }
+        
+        /// make unsupported pills start falling again or should this just be
+        /// part of gameTick? might be easier, but cause superfluous checks?
+        // TODO: try both
     }
     
     func startGameLoop() {
@@ -182,31 +224,24 @@ class Game: ObservableObject {
     }
     
     private func rowPillOccupying(y: CGFloat) -> Int {
+        // TODO: need to double check functionality of this
         let yOffset = y - yBaseline // adjust overlap allowance with this?
-        for i in 0...9 {
+        for i in 1..<(stageCols-1) {
             if yOffset < (baseSize * CGFloat(i)) {
-                return i
+                return i-1
             }
         }
-        return 10
+        return stageCols-1
     }
     
     private func colPillOccupying(x: CGFloat) -> Int {
-        /// different strategy from above. which is better?
-        switch x {
-        case ..<(baseSize + xBaseline):
-            return 0
-        case ..<(2 * baseSize + xBaseline):
-            return 1
-        case ..<(3 * baseSize + xBaseline):
-            return 2
-        case ..<(4 * baseSize + xBaseline):
-            return 3
-        case ..<(5 * baseSize + xBaseline):
-            return 4
-        default:
-            return 5
+        let xOffset = x - xBaseline // adjust overlap allowance with this?
+        for i in 1..<(stageRows-1) {
+            if xOffset < (baseSize * CGFloat(i)) {
+                return i-1
+            }
         }
+        return stageRows-1
     }
 
     private func placePillAbove(id: UUID, loc: Location) {
@@ -214,7 +249,7 @@ class Game: ObservableObject {
         let col = loc.col
         
         if let index = pills.firstIndex(where: { $0.id == id }) {
-            let pill = pills[index]
+            var pill = pills[index]
             // TODO: in theory, having a pill sticking up past the "first" row should be possible?
             /// also, can maybe make this part of pillHasSpace? make it optional return,
             /// and return nil if the issue is the top of the stage.
@@ -224,7 +259,6 @@ class Game: ObservableObject {
                 return
             }
             if pillHasSpace(loc: Location(row-1, col), isHorizontal: pill.isHorizontal) {
-                pills[index].location = Location(row, col)
                 var loc1: Location
                 var loc2: Location?
                 
@@ -243,9 +277,11 @@ class Game: ObservableObject {
                     loc2 = Location(row-2, col)
                 }
                 
-                stage[loc1.row][loc1.col] = pill.piece1.color
+                pill.location = loc1
+                stage[loc1.row][loc1.col] = pill.piece1
                 if let loc = loc2 {
-                    stage[loc.row][loc.col] = pill.piece2?.color
+                    pill.secondaryLocation = loc2
+                    stage[loc.row][loc.col] = pill.piece2
                     checkAround(loc: loc)
                 }
                 checkAround(loc: loc1)
@@ -253,8 +289,7 @@ class Game: ObservableObject {
                 if let i = currentWave.firstIndex(of: id) {
                     currentWave.remove(at: i)
                 }
-            }
-            else {
+            } else {
                 placePillAbove(id: id, loc: Location(row-1, col))
             }
         }
@@ -281,13 +316,15 @@ class Game: ObservableObject {
                 
                 rowLoop: for row in rowsOccupied {
                     for col in colsOccupied {
-                        /// index out of range error here when passing row 6 i think
                         if stage[row][col] != nil {
                             placePillAbove(id: pill.id, loc: Location(mainRow, mainCol))
                             break rowLoop
                         }
                     }
                 }
+            } else {
+                // implies pill.location != nil
+                // check if space below is empty. if so, start falling again.
             }
             
             // tmp
