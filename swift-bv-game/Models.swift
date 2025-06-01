@@ -94,15 +94,14 @@ struct Pill: Identifiable {
     }
     
     var mainLocation: Location? {
-        guard let piece1Location = piece1Location else { return nil }
-        guard let piece2Location = piece2Location else { return nil }
-//        if rotation == .single { return nil }
-        let row = max(piece1Location.row, piece2Location.row)
-        let col = min(piece1Location.col, piece2Location.col)
+        guard let p1 = piece1Location else { return nil }
+        guard let p2 = piece2Location else { return p1 }
+
+        let row = max(p1.row, p2.row)
+        let col = min(p1.col, p2.col)
         return Location(row, col)
     }
     var piece1Location: Location?
-    // where piece2 is
     var piece2Location: Location?
     
     var x: CGFloat
@@ -113,8 +112,6 @@ struct Pill: Identifiable {
         piece1 = PillPiece(id: id)
         piece2 = PillPiece(id: id)
         rotation = .one
-            // tmp
-//        rotation = .single
         // these being nil means it is falling
         piece1Location = nil
         piece2Location = nil

@@ -350,18 +350,9 @@ class Game: ObservableObject {
                         continue
                     } else if (popped as! PillPiece).id == pill.piece1.id {
                         pill.piece1 = pill.piece2!
-                        // tmp: testing
                         pill.piece1Location = pill.piece2Location
-//                        if pill.mainLocation == pill.piece1Location {
-//                            pill.mainLocation = pill.piece2Location
-//                        }
-                    } else {
-//                        if pill.mainLocation == pill.piece2Location {
-//                            pill.mainLocation = pill.piece1Location
-//                        }
                     }
                     pill.piece2 = nil
-//                    pill.piece1Location = pill.mainLocation
                     pill.piece2Location = nil
                     pill.rotation = .single
                     pills[index] = pill
