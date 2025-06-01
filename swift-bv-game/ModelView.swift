@@ -242,18 +242,16 @@ class Game: ObservableObject {
                     loc1 = spaceAbove
                     loc2 = nil
                 }
-                print("placing", loc1.row, loc1.col)
                 stage[loc1.row][loc1.col] = pill.piece1
                 pill.piece1Location = loc1
                 if let loc = loc2 {
-                    print("placing", loc.row, loc.col)
                     pill.piece2Location = loc
                     stage[loc.row][loc.col] = pill.piece2
                     checkAround(loc: loc)
                 }
                 checkAround(loc: loc1)
                 
-//                pill.mainLocation = spaceAbove
+                pill.mainLocation = spaceAbove
                 pills[index] = pill
                 if let i = currentWave.firstIndex(of: id) {
                     currentWave.remove(at: i)
@@ -298,7 +296,7 @@ class Game: ObservableObject {
                 // implies pill.location != nil
                 // check if space below is empty. if so, start falling again.
                 let rowBelow = pill.mainLocation!.row + 1
-                var piecesToFall: [(Int, Int)] = []
+                var colsToFall: [Int] = []
                 
                 if (pill.isHorizontal ?? false && pill.piece2 != nil) {
                     let cols = [pill.piece1Location!.col, pill.piece2Location!.col]
@@ -307,21 +305,21 @@ class Game: ObservableObject {
                         if stage[rowBelow][col] != nil {
                             continue pillLoop
                         } else {
-                            piecesToFall.append((rowBelow, col))
+                            colsToFall.append(col)
                         }
                     }
                 } else {
                     if stage[rowBelow][pill.mainLocation!.col] != nil {
                         continue pillLoop
                     } else {
-                        piecesToFall.append((rowBelow, pill.mainLocation!.col))
+                        colsToFall.append(pill.mainLocation!.col)
                     }
                 }
                 
-                for piece in piecesToFall {
-                    stage[piece.0][piece.1] = nil
+                for col in colsToFall {
+                    stage[pill.mainLocation!.row][col] = nil
                 }
-//                pill.mainLocation = nil
+                pill.mainLocation = nil
                 pill.piece1Location = nil
                 pill.piece2Location = nil
                 pills[i] = pill
@@ -334,7 +332,6 @@ class Game: ObservableObject {
         for loc in toPop {
             let popped = stage[loc.row][loc.col]
             
-            print("removing", loc.row, loc.col)
             stage[loc.row][loc.col] = nil
             
             if popped is Virus {
@@ -352,9 +349,12 @@ class Game: ObservableObject {
                         pill.piece1 = pill.piece2!
                         pill.piece1Location = pill.piece2Location
                     }
+                    pill.mainLocation = pill.piece1Location
                     pill.piece2 = nil
                     pill.piece2Location = nil
                     pill.rotation = .single
+                    pill.x = baseSize * CGFloat(pill.mainLocation!.col + 1)
+                    pill.y = baseSize * CGFloat(pill.mainLocation!.row) + yBaseline
                     pills[index] = pill
                 }
             }
