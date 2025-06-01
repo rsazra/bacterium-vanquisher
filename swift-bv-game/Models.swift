@@ -93,7 +93,14 @@ struct Pill: Identifiable {
         return rotation == .one || rotation == .three
     }
     
-    var mainLocation: Location?
+    var mainLocation: Location? {
+        guard let piece1Location = piece1Location else { return nil }
+        guard let piece2Location = piece2Location else { return nil }
+//        if rotation == .single { return nil }
+        let row = max(piece1Location.row, piece2Location.row)
+        let col = min(piece1Location.col, piece2Location.col)
+        return Location(row, col)
+    }
     var piece1Location: Location?
     // where piece2 is
     var piece2Location: Location?

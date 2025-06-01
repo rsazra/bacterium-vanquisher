@@ -253,7 +253,7 @@ class Game: ObservableObject {
                 }
                 checkAround(loc: loc1)
                 
-                pill.mainLocation = spaceAbove
+//                pill.mainLocation = spaceAbove
                 pills[index] = pill
                 if let i = currentWave.firstIndex(of: id) {
                     currentWave.remove(at: i)
@@ -271,8 +271,8 @@ class Game: ObservableObject {
             pills.append(newPill)
             // TODO: check for game end here
         }
-        for i in pills.indices {
-            let pill = pills[i]
+        pillLoop: for i in pills.indices {
+            var pill = pills[i]
             if pill.mainLocation == nil {
                 // TODO: try other values for falling speed
                 pills[i].y += 0.5
@@ -297,11 +297,35 @@ class Game: ObservableObject {
             } else {
                 // implies pill.location != nil
                 // check if space below is empty. if so, start falling again.
+                let rowBelow = pill.mainLocation!.row + 1
+                var piecesToFall: [(Int, Int)] = []
+                
+                if (pill.isHorizontal ?? false && pill.piece2 != nil) {
+                    let cols = [pill.piece1Location!.col, pill.piece2Location!.col]
+                    
+                    for col in cols {
+                        if stage[rowBelow][col] != nil {
+                            continue pillLoop
+                        } else {
+                            piecesToFall.append((rowBelow, col))
+                        }
+                    }
+                } else {
+                    if stage[rowBelow][pill.mainLocation!.col] != nil {
+                        continue pillLoop
+                    } else {
+                        piecesToFall.append((rowBelow, pill.mainLocation!.col))
+                    }
+                }
+                
+                for piece in piecesToFall {
+                    stage[piece.0][piece.1] = nil
+                }
+//                pill.mainLocation = nil
+                pill.piece1Location = nil
+                pill.piece2Location = nil
+                pills[i] = pill
             }
-            
-            /// make unsupported pills start falling again or should this just be
-            /// part of gameTick? might be easier, but cause superfluous checks?
-            // TODO: try both
             
             // tmp
             if pill.y > 525 { stopGameLoop() }
@@ -312,34 +336,32 @@ class Game: ObservableObject {
             
             print("removing", loc.row, loc.col)
             stage[loc.row][loc.col] = nil
-            // remove viruses from virus list
+            
             if popped is Virus {
                 if let index = viruses.firstIndex(of: popped as! Virus) {
                     viruses.remove(at: index)
                 }
             }
-            // pop individual pill pieces (!)
-            // if pill empty, remove from pill list
             if popped is PillPiece {
                 if let index = pills.firstIndex(where: { $0.id == (popped as! PillPiece).parentPillID }) {
                     var pill = pills[index]
                     if pill.piece2 == nil {
-                        // just remove from pill list
                         pills.remove(at: index)
                         continue
                     } else if (popped as! PillPiece).id == pill.piece1.id {
-                        // that means this is piece1
                         pill.piece1 = pill.piece2!
-                        if pill.mainLocation == pill.piece1Location {
-                            pill.mainLocation = pill.piece2Location
-                        }
+                        // tmp: testing
+                        pill.piece1Location = pill.piece2Location
+//                        if pill.mainLocation == pill.piece1Location {
+//                            pill.mainLocation = pill.piece2Location
+//                        }
                     } else {
-                        if pill.mainLocation == pill.piece2Location {
-                            pill.mainLocation = pill.piece1Location
-                        }
+//                        if pill.mainLocation == pill.piece2Location {
+//                            pill.mainLocation = pill.piece1Location
+//                        }
                     }
                     pill.piece2 = nil
-                    pill.piece1Location = pill.mainLocation
+//                    pill.piece1Location = pill.mainLocation
                     pill.piece2Location = nil
                     pill.rotation = .single
                     pills[index] = pill

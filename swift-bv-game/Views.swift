@@ -73,15 +73,12 @@ struct DrawPills: View {
                     (.degrees(180), .center)
                 case .four:
                     (.degrees(270), .top)
-//                case .single:
-//
                 }
             }
             var transform: CGAffineTransform {
                 switch pill.rotation {
                 case .single:
                     CGAffineTransform()
-//                        .translatedBy(x: -pillSize, y: 0)
                 case .one:
                     CGAffineTransform()
                 case .two:
