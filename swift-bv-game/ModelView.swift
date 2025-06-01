@@ -36,8 +36,6 @@ class Game: ObservableObject {
         for (rowIndex, rowContents) in stage.enumerated() {
             for (colIndex, _) in rowContents.enumerated() {
                 if rowIndex < 5 { continue }
-                //tmp
-                if colIndex == 0 { continue }
                 let options = [nil, VirusColor.red, VirusColor.yellow, VirusColor.blue]
                 
                 if let addition = options.randomElement() {
@@ -280,7 +278,6 @@ class Game: ObservableObject {
                 if pill.y >= (CGFloat(stageRows - 1) * baseSize + yBaseline) {
                     placePillAbove(id: pill.id, loc: Location(stageRows, colPillOccupying(x: pill.x)))
                     continue pillLoop
-//                    stopGameLoop()
                 }
                 // TODO: try other values for falling speed
                 var colsOccupied: [Int] = []
