@@ -36,6 +36,8 @@ class Game: ObservableObject {
         for (rowIndex, rowContents) in stage.enumerated() {
             for (colIndex, _) in rowContents.enumerated() {
                 if rowIndex < 5 { continue }
+                //tmp
+                if colIndex == 0 { continue }
                 let options = [nil, VirusColor.red, VirusColor.yellow, VirusColor.blue]
                 
                 if let addition = options.randomElement() {
@@ -264,16 +266,23 @@ class Game: ObservableObject {
     
     private func gameTick() {
         if currentWave.isEmpty {
+            currentWave.append(nextPill.id)
+            pills.append(nextPill)
             let newPill = Pill()
-            currentWave.append(newPill.id)
-            pills.append(newPill)
+            nextPill = newPill
             // TODO: check for game end here
         }
         pillLoop: for i in pills.indices {
             var pill = pills[i]
             if pill.mainLocation == nil {
+                pills[i].y += 1
+                
+                if pill.y >= (CGFloat(stageRows - 1) * baseSize + yBaseline) {
+                    placePillAbove(id: pill.id, loc: Location(stageRows, colPillOccupying(x: pill.x)))
+                    continue pillLoop
+//                    stopGameLoop()
+                }
                 // TODO: try other values for falling speed
-                pills[i].y += 0.5
                 var colsOccupied: [Int] = []
                 var rowsOccupied: [Int] = []
                 let mainCol = colPillOccupying(x: pill.x)
@@ -296,6 +305,8 @@ class Game: ObservableObject {
                 // implies pill.location != nil
                 // check if space below is empty. if so, start falling again.
                 let rowBelow = pill.mainLocation!.row + 1
+                // skip if at bottom row
+                if rowBelow == stageRows {continue pillLoop}
                 var colsToFall: [Int] = []
                 
                 if (pill.isHorizontal ?? false && pill.piece2 != nil) {
@@ -324,9 +335,6 @@ class Game: ObservableObject {
                 pill.piece2Location = nil
                 pills[i] = pill
             }
-            
-            // tmp
-            if pill.y > 525 { stopGameLoop() }
         }
         
         for loc in toPop {

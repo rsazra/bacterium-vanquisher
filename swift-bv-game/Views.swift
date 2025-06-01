@@ -12,23 +12,30 @@ struct GameView: View {
     
     var body: some View {
         GeometryReader { geometry in
-            ZStack {
-                ZStack {
-                    DrawViruses(viruses: game.viruses)
-                    DrawPills(pills: game.pills, onRotate: game.rotatePill, onMove: game.movePill, onRelease: game.snapPillToCol)
+            VStack {
+                HStack {
+                    PillView(color1: game.nextPill.piece1.color.color, color2: game.nextPill.piece2?.color.color)
+                        .scaleEffect(0.75)
+                    Spacer()
                 }
-                .frame(width: CGFloat(stageCols) * baseSize,
-                       height: CGFloat(stageRows) * baseSize)
-                .position(
-                    x: geometry.size.width / 2,
-                    y: geometry.size.height / 2
-                )
-            }
-            .onAppear {
-                game.startGameLoop()
-            }
-            .onDisappear {
-                game.stopGameLoop()
+                ZStack {
+                    ZStack {
+                        DrawViruses(viruses: game.viruses)
+                        DrawPills(pills: game.pills, onRotate: game.rotatePill, onMove: game.movePill, onRelease: game.snapPillToCol)
+                    }
+                    .frame(width: CGFloat(stageCols) * baseSize,
+                           height: CGFloat(stageRows) * baseSize)
+                    .position(
+                        x: geometry.size.width / 2,
+                        y: geometry.size.height / 2
+                    )
+                }
+                .onAppear {
+                    game.startGameLoop()
+                }
+                .onDisappear {
+                    game.stopGameLoop()
+                }
             }
         }
     }
