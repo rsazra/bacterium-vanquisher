@@ -54,12 +54,12 @@ struct DrawPills: View {
     var body: some View {
         ForEach(pills) { pill in
             var px: CGFloat {
-                if let loc = pill.location {
+                if let loc = pill.mainLocation {
                     CGFloat(loc.col + 1) * baseSize
                 } else { pill.x }
             }
             var py: CGFloat {
-                if let loc = pill.location {
+                if let loc = pill.mainLocation {
                     CGFloat((loc.row + 1) * Int(baseSize) - Int(yBaseline))
                 } else { pill.y }
             }

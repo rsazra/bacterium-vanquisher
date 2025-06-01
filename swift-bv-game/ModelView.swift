@@ -106,7 +106,7 @@ class Game: ObservableObject {
         if let index = pills.firstIndex(where: { $0.id == id }) {
             // do not rotate placed pills!
             var pill = pills[index]
-            if pill.location != nil { return }
+            if pill.mainLocation != nil { return }
             
             pill.rotation = pill.rotation.next()
             let curRow = rowPillOccupying(y: pill.y)
@@ -210,7 +210,6 @@ class Game: ObservableObject {
         let row = loc.row
         let col = loc.col
         let spaceAbove = Location(row-1, col)
-        print("placing", row, col)
         
         if let index = pills.firstIndex(where: { $0.id == id }) {
             var pill = pills[index]
@@ -243,16 +242,18 @@ class Game: ObservableObject {
                     loc1 = spaceAbove
                     loc2 = nil
                 }
+                print("placing", loc1.row, loc1.col)
                 stage[loc1.row][loc1.col] = pill.piece1
-//                pill.location = loc1
+                pill.piece1Location = loc1
                 if let loc = loc2 {
-//                    pill.secondaryLocation = loc2
+                    print("placing", loc.row, loc.col)
+                    pill.piece2Location = loc
                     stage[loc.row][loc.col] = pill.piece2
                     checkAround(loc: loc)
                 }
                 checkAround(loc: loc1)
                 
-                pill.location = spaceAbove
+                pill.mainLocation = spaceAbove
                 pills[index] = pill
                 if let i = currentWave.firstIndex(of: id) {
                     currentWave.remove(at: i)
@@ -272,7 +273,7 @@ class Game: ObservableObject {
         }
         for i in pills.indices {
             let pill = pills[i]
-            if pill.location == nil {
+            if pill.mainLocation == nil {
                 // TODO: try other values for falling speed
                 pills[i].y += 0.5
                 var colsOccupied: [Int] = []
@@ -306,9 +307,11 @@ class Game: ObservableObject {
             if pill.y > 525 { stopGameLoop() }
         }
         
-//        print(toPop)
         for loc in toPop {
             let popped = stage[loc.row][loc.col]
+            
+            print("removing", loc.row, loc.col)
+            stage[loc.row][loc.col] = nil
             // remove viruses from virus list
             if popped is Virus {
                 if let index = viruses.firstIndex(of: popped as! Virus) {
@@ -327,20 +330,21 @@ class Game: ObservableObject {
                     } else if (popped as! PillPiece).id == pill.piece1.id {
                         // that means this is piece1
                         pill.piece1 = pill.piece2!
-                        pill.piece2 = nil
-                        pill.rotation = .single
-//                        pill.location = pill.secondaryLocation!
-//                        pill.secondaryLocation = nil
+                        if pill.mainLocation == pill.piece1Location {
+                            pill.mainLocation = pill.piece2Location
+                        }
                     } else {
-                        // this means it is piece2
-                        pill.piece2 = nil
-                        pill.rotation = .single
-//                        pill.secondaryLocation = nil
+                        if pill.mainLocation == pill.piece2Location {
+                            pill.mainLocation = pill.piece1Location
+                        }
                     }
+                    pill.piece2 = nil
+                    pill.piece1Location = pill.mainLocation
+                    pill.piece2Location = nil
+                    pill.rotation = .single
                     pills[index] = pill
                 }
             }
-            stage[loc.row][loc.col] = nil
         }
         toPop.removeAll()
     }

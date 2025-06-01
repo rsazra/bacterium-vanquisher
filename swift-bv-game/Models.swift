@@ -93,9 +93,10 @@ struct Pill: Identifiable {
         return rotation == .one || rotation == .three
     }
     
-    var location: Location?
+    var mainLocation: Location?
+    var piece1Location: Location?
     // where piece2 is
-//    var secondaryLocation: Location?
+    var piece2Location: Location?
     
     var x: CGFloat
     var y: CGFloat
@@ -108,8 +109,8 @@ struct Pill: Identifiable {
             // tmp
 //        rotation = .single
         // these being nil means it is falling
-        location = nil
-//        secondaryLocation = nil
+        piece1Location = nil
+        piece2Location = nil
         // spawn point
         x = CGFloat(stageCols) * baseSize / 2
         y = CGFloat(yBaseline)
