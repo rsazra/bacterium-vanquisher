@@ -28,10 +28,9 @@ class Game: ObservableObject {
         seed()
     }
     
-    // TODO: need to ensure we don't get 3 in a row of the same color
+    // TODO: ensure we don't get 3 in a row of the same color
     // would be nice to do so by randomly choosing which cell to
     //  generate next, and having the result show up incrementally
-    //  like in the real game.
     private func seed() {
         for (rowIndex, rowContents) in stage.enumerated() {
             for (colIndex, _) in rowContents.enumerated() {
@@ -54,8 +53,6 @@ class Game: ObservableObject {
         let col = loc.col
         let color = stage[row][col]?.color
         if color == nil { return }
-        
-//        var toPop: Set<Location> = []
         
         // vertical
         for i in 0..<4 {
@@ -104,7 +101,6 @@ class Game: ObservableObject {
     
     func rotatePill(id: UUID) {
         if let index = pills.firstIndex(where: { $0.id == id }) {
-            // do not rotate placed pills!
             var pill = pills[index]
             if pill.mainLocation != nil { return }
             
@@ -125,11 +121,10 @@ class Game: ObservableObject {
     func movePill(id: UUID, newX: CGFloat, newY: CGFloat) {
         if let index = pills.firstIndex(where: { $0.id == id }) {
             var pill = pills[index]
-            // x
+            
             let rotationOffset = pill.isHorizontal != nil ? ( pill.isHorizontal! ? 0 : baseSize ) : baseSize
             var setX = newX + rotationOffset/2
             
-            /// keep within grid bounds
             if (setX < baseSize) {
                 setX = baseSize
             }
@@ -137,14 +132,12 @@ class Game: ObservableObject {
                 setX = CGFloat(stageCols - 1) * baseSize + rotationOffset
             }
             
-            // y
-            // TODO: dont go past the bottom of the stage
             var setY = newY
             if setY < pill.y {
                 setY = pill.y
             }
             
-            // collision
+            // collision check
             let newCol = colPillOccupying(x: setX)
             let newRow = rowPillOccupying(y: setY)
             if pillHasSpace(loc: Location(newRow, newCol), isHorizontal: pill.isHorizontal) {
@@ -163,7 +156,6 @@ class Game: ObservableObject {
         }
     }
     
-    // kind of jank, i think this could be better
     private func pillHasSpace(loc: Location, isHorizontal: Bool?) -> Bool {
         let row = loc.row
         let col = loc.col
@@ -186,8 +178,8 @@ class Game: ObservableObject {
     }
     
     private func rowPillOccupying(y: CGFloat) -> Int {
-        // TODO: need to double check functionality of this
-        let yOffset = y - yBaseline // adjust overlap allowance with this?
+        // TODO: try adjusting overlap allowance with this?
+        let yOffset = y - yBaseline
         for i in 0..<(stageRows-1) {
             if yOffset < (baseSize * CGFloat(i)) {
                 return i
@@ -197,7 +189,7 @@ class Game: ObservableObject {
     }
     
     private func colPillOccupying(x: CGFloat) -> Int {
-        let xOffset = x - xBaseline // adjust overlap allowance with this?
+        let xOffset = x - xBaseline
         for i in 0..<(stageCols-1) {
             if xOffset < (baseSize * CGFloat(i + 1)) {
                 return i
@@ -213,9 +205,8 @@ class Game: ObservableObject {
         
         if let index = pills.firstIndex(where: { $0.id == id }) {
             var pill = pills[index]
-            // TODO: in theory, having a pill sticking up past the "first" row should be possible?
-            /// also, can maybe make this part of pillHasSpace? make it optional return,
-            /// and return nil if the issue is the top of the stage.
+            // TODO: actual game over condition is a pill in the way of the new pill
+            // otherwise, getting into this state shouldn't be possible i think?
             if row == 0  || pill.isHorizontal != true && row == 1 {
                 print("Game Over")
                 self.stopGameLoop()
@@ -251,7 +242,6 @@ class Game: ObservableObject {
                 }
                 checkAround(loc: loc1)
                 
-                pill.mainLocation = spaceAbove
                 pills[index] = pill
                 if let i = currentWave.firstIndex(of: id) {
                     currentWave.remove(at: i)
@@ -268,18 +258,18 @@ class Game: ObservableObject {
             pills.append(nextPill)
             let newPill = Pill()
             nextPill = newPill
-            // TODO: check for game end here
+            // TODO: check for game end here (if pill has space in starting spot)
         }
         pillLoop: for i in pills.indices {
             var pill = pills[i]
             if pill.mainLocation == nil {
+                // TODO: try other values for falling speed
                 pills[i].y += 1
                 
                 if pill.y >= (CGFloat(stageRows - 1) * baseSize + yBaseline) {
                     placePillAbove(id: pill.id, loc: Location(stageRows, colPillOccupying(x: pill.x)))
                     continue pillLoop
                 }
-                // TODO: try other values for falling speed
                 var colsOccupied: [Int] = []
                 var rowsOccupied: [Int] = []
                 let mainCol = colPillOccupying(x: pill.x)
@@ -327,7 +317,6 @@ class Game: ObservableObject {
                 for col in colsToFall {
                     stage[pill.mainLocation!.row][col] = nil
                 }
-                pill.mainLocation = nil
                 pill.piece1Location = nil
                 pill.piece2Location = nil
                 pills[i] = pill
@@ -354,7 +343,6 @@ class Game: ObservableObject {
                         pill.piece1 = pill.piece2!
                         pill.piece1Location = pill.piece2Location
                     }
-                    pill.mainLocation = pill.piece1Location
                     pill.piece2 = nil
                     pill.piece2Location = nil
                     pill.rotation = .single
