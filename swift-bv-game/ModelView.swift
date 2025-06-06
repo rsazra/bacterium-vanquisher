@@ -294,32 +294,32 @@ class Game: ObservableObject {
                 let rowBelow = pill.mainLocation!.row + 1
                 // skip if at bottom row
                 if rowBelow == stageRows {continue pillLoop}
-                var colsToFall: [Int] = []
+                var willFall = false
                 
-                if (pill.isHorizontal ?? false && pill.piece2 != nil) {
-                    let cols = [pill.piece1Location!.col, pill.piece2Location!.col]
-                    
-                    for col in cols {
-                        if stage[rowBelow][col] != nil {
-                            continue pillLoop
-                        } else {
-                            colsToFall.append(col)
+                
+                let locs: [Location?] = [pill.piece1Location, pill.piece2Location]
+                
+                // if the pill is horizontal, need to check if space below both is nil
+                // otherwise, just check below mainLocation
+                if (pill.isHorizontal ?? false) {
+                    if stage[rowBelow][locs[0]!.col] == nil && stage[rowBelow][locs[1]!.col] == nil {
+                        willFall = true
+                    }
+                } else if stage[rowBelow][pill.mainLocation!.col] == nil {
+                    willFall = true
+                }
+                
+                if willFall {
+                    for l in locs {
+                        if let l = l {
+                            stage[l.row][l.col] = nil
                         }
                     }
-                } else {
-                    if stage[rowBelow][pill.mainLocation!.col] != nil {
-                        continue pillLoop
-                    } else {
-                        colsToFall.append(pill.mainLocation!.col)
-                    }
+                    
+                    pill.piece1Location = nil
+                    pill.piece2Location = nil
+                    pills[i] = pill
                 }
-                
-                for col in colsToFall {
-                    stage[pill.mainLocation!.row][col] = nil
-                }
-                pill.piece1Location = nil
-                pill.piece2Location = nil
-                pills[i] = pill
             }
         }
         
